@@ -1,3 +1,3 @@
 grammar g;
-prule: 'hello' VARIABEL;
+prule: 'hello' VARIABEL+;
 VARIABEL: 'a'..'z' | ' ' | 'A'..'Z';
