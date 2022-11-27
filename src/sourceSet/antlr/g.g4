@@ -232,7 +232,8 @@ primaryExpression:
 	literal+
 	| LeftParen expression RightParen
 	| idExpression
-	| lambdaExpression;
+	| lambdaExpression
+	| query;
 
 idExpression: unqualifiedId | qualifiedId;
 
