@@ -1,10 +1,17 @@
+import java.io.FileInputStream;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
+import java.io.*;
+
 public class Main {
 
     public static void main(String[] args) throws Exception{
 
         //Antlr setup for parsing
         ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(args[1]));
-        ExprGrammarFileLexer lexer = new ExprGrammarFileLexer(input);
+        gLexer lexer = new gLexer(input);
+        /*
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         ExprGrammarFileParser parser = new ExprGrammarFileParser(tokens);
         ParseTree tree = parser.stm();
@@ -46,6 +53,6 @@ public class Main {
         System.out.println("*  OUTPUT IS IN THE Simple.out  *");
         System.out.println("*                               *");
         System.out.println("*********************************");
-
+    */
     }
 }

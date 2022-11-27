@@ -40,8 +40,22 @@ generateGrammarSource {
     }
 }
 
-clean.doLast {
-    file('generated-src').deleteDir()
+compileJava.dependsOn generateGrammarSource
+sourceSets {
+    generated {
+        java.srcDir 'generated-src/main/java/'
+    }
+}
+
+compileJava.source sourceSets.generated.java, sourceSets.main.java
+
+
+
+
+idea {
+    module {
+        sourceDirs += file("generated-src/main/java/")
+    }
 }
 
 test {
