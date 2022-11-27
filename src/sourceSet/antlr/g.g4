@@ -761,7 +761,7 @@ braceOrEqualInitializer:
 	Assign initializerClause
 	| bracedInitList;
 
-initializerClause: assignmentExpression | bracedInitList;
+initializerClause: assignmentExpression | bracedInitList | matrix;
 
 initializerList:
 	initializerClause Ellipsis? (
@@ -826,6 +826,7 @@ theOperator:
 
 literal:
 	IntegerLiteral
+	| MatrixLiteral
 	| CharacterLiteral
 	| FloatingLiteral
 	| StringLiteral
@@ -845,6 +846,10 @@ initexpr: declarator ASSIGN expr;
 expr: '(' expr ')';
 //declarator: TYPE VARIABLE ;
 obj: INTEGER | STRING | matrix | VARIABLE;
+
+///OUR NEW TYPES matrix,
+//OUR NEW primary literal expression query, shortquery, askingquery
+
 matrix: '$' row('\\' row)+ '#';
 row: obj('|' obj)*;
 
@@ -856,9 +861,10 @@ doblock: expr | blockcode;
 blockcode: '{'expr+'}';
 assign: TYPE VARIABLE '=' expr;
 
+
 shortquery: sqlbase sqlwhere?;
 sqlbase: '[' querydatajoin (',' querydatajoin )* ']';
 sqlwhere: '[' logicalexpr(',' logicalexpr)+ ']'; //[score>10,country="Poland"]
-querydatajoin: VARIABLE('.'VARIABLE)*':'VARIABLE(','VARIABLE)+;
-query: '[' VARIABLE('|' VARIABLE )+ 'from' shortquery ']';
-askingquery: VARIABLE'?'sqlwhere; // A?[score>10,country="Poland"]
+querydatajoin: Identifier('.'VARIABLE)*':'Identifier(','Identifier)+;
+query: '[' Identifier('|' Identifier )+ 'from' shortquery ']';
+askingquery: Identifier'?'sqlwhere; // A?[score>10,country="Poland"]
