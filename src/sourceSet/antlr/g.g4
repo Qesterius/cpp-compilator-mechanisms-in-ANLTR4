@@ -6,16 +6,16 @@ fragment DIGIT : [0-9] ;
 fragment NONDIGIT : UNDERSCORE|LOWERCASE|UPPERCASE;
 fragment UNDERSCORE: '_';
 
-INTEGER: [1-9]+[0-9]*;
+//INTEGER: [1-9]+[0-9]*;
 
 
-NUMBER
+/*NUMBER
  : INTEGER
  | FLOAT_NUMBER
  ;
 
 FLOAT_NUMBER: DIGIT+'.'DIGIT;
-VARIABLE: ([A-Z] | [a-z] | '_')+;
+//VARIABLE: ([A-Z] | [a-z] | '_')+;
 STRING: '"' ( '\\"' | . )*? '"';
 WS : (' ' | '\t' | '\n')+ -> channel(HIDDEN);
 
@@ -25,12 +25,13 @@ TYPE: 'string' | 'num' | 'mat' | 'bool';
 ARITHMOPERATOR: '+' | '-' | '%' | '/';
 ASSIGN: '<-';
 COMPARATOR: '!=' | '=' | '>' | '<' | '>=' | '<=';
-
+*/
 IntegerLiteral:
 	DecimalLiteral;
 
 StringLiteral:
-    STRING;
+    (Rawstring
+    	|'"' Schar* '"');
 
 BooleanLiteral: False_ | True_;
 
@@ -154,12 +155,19 @@ DotStar: '.*';
 
 Ellipsis: '...';
 
+fragment Hexquad:
+	HEXADECIMALDIGIT HEXADECIMALDIGIT HEXADECIMALDIGIT HEXADECIMALDIGIT;
+
+fragment Universalcharactername:
+	'\\u' Hexquad
+	| '\\U' Hexquad Hexquad;
 
 Identifier:
 	/*
 	 Identifiernondigit | Identifier Identifiernondigit | Identifier DIGIT
 	 */
 	Identifiernondigit (Identifiernondigit | DIGIT)*;
+
 
 fragment Identifiernondigit: NONDIGIT;
 
@@ -202,8 +210,13 @@ fragment SIGN: [+-];
 fragment Digitsequence: DIGIT ('\''? DIGIT)*;
 
 fragment Floatingsuffix: [flFL];
+fragment Schar:
+	~ ["\\\r\n]
+	| Escapesequence
+	| Universalcharactername;
+fragment HEXADECIMALDIGIT: [0-9a-fA-F];
 
-
+fragment Rawstring: 'R"' (( '\\' ["()] )|~[\r\n (])*? '(' ~[)]*? ')'  (( '\\' ["()]) | ~[\r\n "])*? '"';
 Whitespace: [ \t]+ -> skip;
 Newline: ('\r' '\n'? | '\n') -> skip;
 BlockComment: '/*' .*? '*/' -> skip;
@@ -224,9 +237,8 @@ idExpression: unqualifiedId | qualifiedId;
 unqualifiedId:
 	Identifier
 	| operatorFunctionId
-	| conversionFunctionId
 	| literalOperatorId
-	| Tilde (className | decltypeSpecifier);
+	| Tilde ( decltypeSpecifier);
 
 qualifiedId: nestedNameSpecifier unqualifiedId;
 
@@ -255,7 +267,7 @@ simpleCapture: And? Identifier | This;
 initcapture: And? Identifier initializer;
 
 lambdaDeclarator:
-	LeftParen parameterDeclarationClause? RightParen Mutable? exceptionSpecification?
+	LeftParen parameterDeclarationClause? RightParen Mutable?
 		attributeSpecifierSeq? trailingReturnType?;
 
 postfixExpression:
@@ -521,7 +533,6 @@ typedefName: Identifier;
 
 typeSpecifier:
 	trailingTypeSpecifier
-	| classSpecifier
 	| enumSpecifier;
 
 trailingTypeSpecifier:
