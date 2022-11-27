@@ -56,6 +56,8 @@ For: 'for';
 
 If: 'if';
 
+Matrix: 'matrix';
+
 Int: 'int';
 
 Return: 'return';
@@ -561,6 +563,7 @@ simpleTypeSpecifier:
 	| simpleTypeSignednessModifier? Char16
 	| simpleTypeSignednessModifier? Char32
 	| simpleTypeSignednessModifier? Wchar
+    | Matrix
 	| Bool
 	| simpleTypeSignednessModifier? simpleTypeLengthModifier* Int
 	| Float
