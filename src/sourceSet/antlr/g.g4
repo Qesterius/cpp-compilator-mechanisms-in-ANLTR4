@@ -173,7 +173,7 @@ Identifier:
 
 fragment Identifiernondigit: NONDIGIT;
 
-DecimalLiteral: NONZERODIGIT ('\''? DIGIT)*;
+DecimalLiteral: NONZERODIGIT ('\''? DIGIT)* | DIGIT;
 
 fragment NONZERODIGIT: [1-9];
 
@@ -840,34 +840,29 @@ literal:
 
 
 //assignmentexpr:;
-logicalexpr:  | BOOLEAN;
-arithmexpr: obj (ARITHMOPERATOR obj)+;
+//logicalexpr:  | BOOLEAN;
+//arithmexpr: obj (ARITHMOPERATOR obj)+;
 
-startexpr: initexpr ';'; //te od ktorych sie zaczyna linia najczesciej, zeby oddzielic od zwyklych expr
-initexpr: declarator ASSIGN expr;
+//startexpr: initexpr ';'; //te od ktorych sie zaczyna linia najczesciej, zeby oddzielic od zwyklych expr
+//initexpr: declarator ASSIGN expr;
 
-expr: '(' expr ')';
+//expr: '(' expr ')';
 //declarator: TYPE VARIABLE ;
-obj: INTEGER | STRING | matrix | VARIABLE;
+//obj: INTEGER | STRING | matrix | VARIABLE;
 
 ///OUR NEW TYPES matrix,
 //OUR NEW primary literal expression query, shortquery, askingquery
 
-matrix: '$' row('\\' row)+ '#';
-row: obj('|' obj)*;
-
-whileexpr: WHILE '(' logicalexpr')' doblock;
-doblock: expr | blockcode;
+matrix: '$' row('\\' row)* '#';
+row: literal('|' literal)*;
 
 //condition: 'if'(logicalexpr);
 
-blockcode: '{'expr+'}';
-assign: TYPE VARIABLE '=' expr;
 
 
 shortquery: sqlbase sqlwhere?;
 sqlbase: '[' querydatajoin (',' querydatajoin )* ']';
-sqlwhere: '[' logicalexpr(',' logicalexpr)+ ']'; //[score>10,country="Poland"]
-querydatajoin: Identifier('.'VARIABLE)*':'Identifier(','Identifier)+;
+sqlwhere: '[' conditionalExpression(',' conditionalExpression)* ']'; //[score>10,country="Poland"]
+querydatajoin: Identifier('.'Identifier)*':'Identifier(','Identifier)+;
 query: '[' Identifier('|' Identifier )+ 'from' shortquery ']';
 askingquery: Identifier'?'sqlwhere; // A?[score>10,country="Poland"]
