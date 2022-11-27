@@ -33,6 +33,8 @@ StringLiteral:
     (Rawstring
     	|'"' Schar* '"');
 
+
+
 BooleanLiteral: False_ | True_;
 
 Directive: '/*' ~ [\n]* '*/' -> channel (HIDDEN);
@@ -829,7 +831,6 @@ theOperator:
 
 literal:
 	IntegerLiteral
-	| MatrixLiteral
 	| CharacterLiteral
 	| FloatingLiteral
 	| StringLiteral
@@ -840,34 +841,36 @@ literal:
 
 
 //assignmentexpr:;
-logicalexpr:  | BOOLEAN;
-arithmexpr: obj (ARITHMOPERATOR obj)+;
+//logicalexpr:  | BOOLEAN;
+//arithmexpr: obj (ARITHMOPERATOR obj)+;
 
-startexpr: initexpr ';'; //te od ktorych sie zaczyna linia najczesciej, zeby oddzielic od zwyklych expr
-initexpr: declarator ASSIGN expr;
+//startexpr: initexpr ';'; //te od ktorych sie zaczyna linia najczesciej, zeby oddzielic od zwyklych expr
+//initexpr: declarator ASSIGN expr;
 
-expr: '(' expr ')';
+//expr: '(' expr ')';
 //declarator: TYPE VARIABLE ;
-obj: INTEGER | STRING | matrix | VARIABLE;
+//obj: INTEGER | STRING | matrix | VARIABLE;
 
 ///OUR NEW TYPES matrix,
 //OUR NEW primary literal expression query, shortquery, askingquery
 
-matrix: '$' row('\\' row)+ '#';
-row: obj('|' obj)*;
+matrix: '$' row('\\' row)* '#'
+    | query;
+row: literal('|' literal)*;
 
-whileexpr: WHILE '(' logicalexpr')' doblock;
-doblock: expr | blockcode;
+//whileexpr: WHILE '(' logicalexpr')' doblock;
+//doblock: expr | blockcode;
 
 //condition: 'if'(logicalexpr);
 
-blockcode: '{'expr+'}';
-assign: TYPE VARIABLE '=' expr;
+//blockcode: '{'expr+'}';
+//assign: TYPE VARIABLE '=' expr;
 
 
 shortquery: sqlbase sqlwhere?;
-sqlbase: '[' querydatajoin (',' querydatajoin )* ']';
-sqlwhere: '[' logicalexpr(',' logicalexpr)+ ']'; //[score>10,country="Poland"]
-querydatajoin: Identifier('.'VARIABLE)*':'Identifier(','Identifier)+;
+sqlbase: '[' querydatajoin (',' querydatajoin )* ']'
+    | Identifier;
+sqlwhere: '[' conditionalExpression(',' conditionalExpression)* ']'; //[score>10,country="Poland"]
+querydatajoin: Identifier(('.' | ',')Identifier)*(':'Identifier(','Identifier)+)*;
 query: '[' Identifier('|' Identifier )+ 'from' shortquery ']';
 askingquery: Identifier'?'sqlwhere; // A?[score>10,country="Poland"]
