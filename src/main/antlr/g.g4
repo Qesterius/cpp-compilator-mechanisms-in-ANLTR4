@@ -175,7 +175,7 @@ Identifier:
 
 fragment Identifiernondigit: NONDIGIT;
 
-DecimalLiteral: NONZERODIGIT ('\''? DIGIT)*;
+DecimalLiteral: NONZERODIGIT ('\''? DIGIT)* | DIGIT;
 
 fragment NONZERODIGIT: [1-9];
 
@@ -234,7 +234,8 @@ primaryExpression:
 	literal+
 	| LeftParen expression RightParen
 	| idExpression
-	| lambdaExpression;
+	| lambdaExpression
+	| query;
 
 idExpression: unqualifiedId | qualifiedId;
 
@@ -831,6 +832,7 @@ theOperator:
 
 literal:
 	IntegerLiteral
+	| MatrixLiteral
 	| CharacterLiteral
 	| FloatingLiteral
 	| StringLiteral
