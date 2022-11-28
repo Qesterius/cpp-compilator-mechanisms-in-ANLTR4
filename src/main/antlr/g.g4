@@ -829,7 +829,7 @@ theOperator:
 	| Comma
 	| LeftParen RightParen
 	| LeftBracket RightBracket;
- 
+
 literal:
 	IntegerLiteral
 	| MatrixLiteral
