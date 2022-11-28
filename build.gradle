@@ -13,24 +13,32 @@ dependencies {
     testImplementation(platform('org.junit:junit-bom:5.7.0'))
     testImplementation('org.junit.jupiter:junit-jupiter')
 }
+
+
 generateGrammarSource {
     maxHeapSize = "128m"
-    arguments += ['-package', 'me.tomassetti.examples.MarkupParser', '-visitor', '-no-listener']
-}
-compileJava.dependsOn generateGrammarSource
-sourceSets {
-    generated {
-        java.srcDir 'generated-src/antlr/main/'
+    arguments += ['-package', 'org.agh.cppinterpreter', '-visitor', '-no-listener']
+    doLast {
+
+        copy{
+            from("${buildDir}/generated-src/antlr/main")
+            into("generated-src/main/java/org/agh/cppinterpreter")
+        }
+        delete("${buildDir}/generated-src/antlr/main")
     }
 }
-compileJava.source sourceSets.generated.java, sourceSets.main.java
+
+
 clean{
     delete "generated-src"
 }
 idea {
     module {
-        sourceDirs += file("generated-src/antlr/main/")
+        sourceDirs += file("generated-src/main/java")
+        sourceDirs += file("src/main/java")
     }
+
+
 }
 test {
     useJUnitPlatform()
