@@ -12,6 +12,8 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 
 public class Main {
+//TODO: Translation
+//TODO: Validation of scope execution and declaration of variables
 
     public static void main(String[] args) throws Exception{
 
