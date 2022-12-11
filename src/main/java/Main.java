@@ -1,4 +1,3 @@
-import org.agh.cppinterpreter.gBaseVisitor;
 import org.agh.cppinterpreter.gLexer;
 import org.agh.cppinterpreter.gParser;
 import org.antlr.v4.runtime.CharStream;
@@ -18,7 +17,7 @@ public class Main {
     public static void main(String[] args) throws Exception{
 
         //Antlr setup for parsing
-        CharStream input = CharStreams.fromStream(new FileInputStream(args[1]));
+        CharStream input = CharStreams.fromStream(new FileInputStream(args[0]));
         gLexer lexer = new gLexer(input);
 
 
@@ -38,25 +37,26 @@ public class Main {
         writer.newLine();
 
         //Assembly codes generated with EvalVisitor class
-        gBaseVisitor eval = new gBaseVisitor();
+        /*
+        EvalVisitor eval = new EvalVisitor();
         eval.visit(tree);
 
         //End of assembly code for exit, print and data variables
-        /*eval.PrintExit();
+        eval.PrintExit();
 
         if (eval.IsVisitPrint)
             eval.CallPrint();
         eval.PrintData();
-        */
 
 
-     /*   //Writing output to Simple.out
+
+        //Writing output to Simple.out
         for(int i = 0; i < eval.printList.size(); i++)
         {
             writer.write((String) eval.printList.get(i));
             writer.newLine();
         }
-     */
+        */
         writer.close();
 
         //Warning label for Simple.out

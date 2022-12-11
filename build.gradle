@@ -22,19 +22,20 @@ generateGrammarSource {
 
         copy{
             from("${buildDir}/generated-src/antlr/main")
-            into("generated-src/main/java/org/agh/cppinterpreter")
+            into("src/main/java/org/agh/cppinterpreter")
         }
         delete("${buildDir}/generated-src/antlr/main")
     }
 }
 
 
+
 clean{
     delete "generated-src"
 }
+
 idea {
     module {
-        sourceDirs += file("generated-src/main/java")
         sourceDirs += file("src/main/java")
     }
 
