@@ -1,9 +1,9 @@
+import org.agh.cppinterpreter.ValidatorVisitor;
 import org.agh.cppinterpreter.gLexer;
 import org.agh.cppinterpreter.gParser;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
@@ -23,21 +23,22 @@ public class Main {
 
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         gParser parser = new gParser(tokens);
-        ParseTree tree = parser.translationUnit();
-
+        gParser.CompilationUnitContext programEntry = parser.compilationUnit();
+        ValidatorVisitor<Boolean> scopeValidator = new ValidatorVisitor<>();
+        scopeValidator.visitCompilationUnit(programEntry);
         //Prints parsing tree to screen
-        System.out.println(tree.toStringTree(parser));
+        System.out.println(programEntry.toStringTree(parser));
 
         FileOutputStream file = new FileOutputStream("src\\Simple.out");
         OutputStreamWriter fileWriter = new OutputStreamWriter(file);
         BufferedWriter writer = new BufferedWriter(fileWriter);
-
+        /*
         //Start of cpp translated code
-        writer.write("code segment");
-        writer.newLine();
+        //writer.write("code segment");
+        //writer.newLine();
 
         //Assembly codes generated with EvalVisitor class
-        /*
+
         EvalVisitor eval = new EvalVisitor();
         eval.visit(tree);
 
@@ -56,7 +57,7 @@ public class Main {
             writer.write((String) eval.printList.get(i));
             writer.newLine();
         }
-        */
+
         writer.close();
 
         //Warning label for Simple.out
@@ -65,6 +66,6 @@ public class Main {
         System.out.println("*  OUTPUT IS IN THE Simple.out  *");
         System.out.println("*                               *");
         System.out.println("*********************************");
-
+        */
     }
 }
