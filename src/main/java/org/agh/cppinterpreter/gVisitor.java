@@ -473,6 +473,12 @@ public interface gVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitDeclarationList(gParser.DeclarationListContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link gParser#constant}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitConstant(gParser.ConstantContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link gParser#matrix}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

@@ -4,7 +4,7 @@ prog:compilationUnit;
 
 primaryExpression
     :   Identifier
-    |   Constant
+    |   constant
     |   StringLiteral+
     |   '(' expression ')'
     |   query
@@ -541,14 +541,14 @@ HexQuad
     :   HexadecimalDigit HexadecimalDigit HexadecimalDigit HexadecimalDigit
     ;
 
-Constant
+constant
     :   IntegerConstant
     |   FloatingConstant
     //|   EnumerationConstant
     |   CharacterConstant
     ;
 
-fragment
+
 IntegerConstant
     :   DecimalConstant IntegerSuffix?
     |   OctalConstant IntegerSuffix?
@@ -619,7 +619,7 @@ LongLongSuffix
     :   'll' | 'LL'
     ;
 
-fragment
+
 FloatingConstant
     :   DecimalFloatingConstant
     |   HexadecimalFloatingConstant

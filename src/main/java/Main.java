@@ -1,9 +1,11 @@
+import org.agh.cppinterpreter.EvalVisitor;
 import org.agh.cppinterpreter.ValidatorVisitor;
 import org.agh.cppinterpreter.gLexer;
 import org.agh.cppinterpreter.gParser;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
@@ -27,11 +29,16 @@ public class Main {
         ValidatorVisitor<Boolean> scopeValidator = new ValidatorVisitor<>();
         scopeValidator.visitCompilationUnit(programEntry);
         //Prints parsing tree to screen
-        System.out.println(programEntry.toStringTree(parser));
 
         FileOutputStream file = new FileOutputStream("src\\Simple.out");
         OutputStreamWriter fileWriter = new OutputStreamWriter(file);
         BufferedWriter writer = new BufferedWriter(fileWriter);
+
+        if(!scopeValidator.getError()){
+            EvalVisitor eval = new EvalVisitor();
+            eval.visit(programEntry);
+        }
+
         /*
         //Start of cpp translated code
         //writer.write("code segment");

@@ -13,6 +13,10 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
     Stack<HashMap<String,Integer>> notFinishedOuterScopes = new Stack<HashMap<String, Integer>>();
     Boolean isError = false;
 
+    public Boolean getError() {
+        return isError;
+    }
+
     @Override public T visitBlockItemList(gParser.BlockItemListContext ctx) {
         System.out.println("OPENING NEW SCOPE");
         notFinishedOuterScopes.add(new HashMap<>());
