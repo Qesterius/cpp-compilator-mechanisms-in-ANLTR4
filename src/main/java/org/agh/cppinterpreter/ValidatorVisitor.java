@@ -17,6 +17,10 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
         return isError;
     }
 
+    public ValidatorVisitor() {
+        notFinishedOuterScopes.add(new HashMap<String,Integer>());
+    }
+
     @Override public T visitBlockItemList(gParser.BlockItemListContext ctx) {
         System.out.println("OPENING NEW SCOPE");
         notFinishedOuterScopes.add(new HashMap<>());
@@ -29,27 +33,49 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
         return visitChildren(ctx);
     }
 
-    @Override
-    public T visitDeclarator(gParser.DeclaratorContext ctx) {
-        if(ctx.directDeclarator().identifierList() != null && ctx.directDeclarator().identifierList().Identifier() != null)
+    @Override public T visitDirectDeclarator(gParser.DirectDeclaratorContext ctx)
+    {
+
+        try{
+        if(ctx.directDeclarator() != null)
+            return super.visitDirectDeclarator(ctx);
+
+        if(ctx.identifierList() != null && ctx.identifierList().Identifier() != null)
         for (TerminalNode identif:ctx.directDeclarator().identifierList().Identifier()
              ) {
             String varname =identif.getSymbol().getText();
-            System.out.println("VALIDATING DECLARATION OF:"+varname);
-            if(findDeclaration(varname))
-            {
-                System.out.println(varname+ " is declared multiple times");
-                isError=true;
-            }else
-                notFinishedOuterScopes.peek().put(varname,0);
+            validateDeclaration(varname);
         }
-        return super.visitDeclarator(ctx);
+        if(ctx.Identifier() != null)
+        {
+            String varname = ctx.Identifier().getSymbol().getText();
+            validateDeclaration(varname);
+        }
+        }catch(Exception e)
+        {
+            System.out.println("EXCEPTION "+e.toString());
+        }
+
+        return super.visitDirectDeclarator(ctx);
+    }
+
+    private void validateDeclaration(String varname)
+    {
+        System.out.println("VALIDATING DECLARATION OF:"+varname);
+        if(findDeclaration(varname))
+        {
+            System.out.println(varname+ " is declared multiple times");
+            isError=true;
+        }else
+            notFinishedOuterScopes.peek().put(varname,0);
+
     }
 
     public boolean findDeclaration(String name)
     {
-        for (HashMap map: notFinishedOuterScopes.stream().toList()
-             ) {
+        if(notFinishedOuterScopes.empty())
+            return false;
+        for (HashMap<String, Integer> map: notFinishedOuterScopes.stream().toList()             ) {
             if(map.containsKey(name))
                 return true;
         }
@@ -72,3 +98,4 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
 
     //blockitemList visit -> new scope
 }
+

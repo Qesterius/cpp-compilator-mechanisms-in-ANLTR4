@@ -5,39 +5,52 @@ import org.agh.cppinterpreter.gParser;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.io.BufferedWriter;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
+import java.io.FileNotFoundException;
 
 public class Main {
 //TODO: Translation
 //TODO: Validation of scope execution and declaration of variables
 
     public static void main(String[] args) throws Exception{
-
+        boolean failure=false;
+        CharStream input = null;
+        FileInputStream file = null;
         //Antlr setup for parsing
-        CharStream input = CharStreams.fromStream(new FileInputStream(args[0]));
+        try {
+            file = new FileInputStream(args[0]);
+        }catch(FileNotFoundException fnf)
+        {
+            System.out.println("File not found, exiting... "+ args[0]);
+            failure = true;
+        }
+        if(failure)
+            return;
+        input = CharStreams.fromStream(file);
         gLexer lexer = new gLexer(input);
 
 
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         gParser parser = new gParser(tokens);
         gParser.CompilationUnitContext programEntry = parser.compilationUnit();
+
         ValidatorVisitor<Boolean> scopeValidator = new ValidatorVisitor<>();
         scopeValidator.visitCompilationUnit(programEntry);
-        //Prints parsing tree to screen
 
-        FileOutputStream file = new FileOutputStream("src\\Simple.out");
-        OutputStreamWriter fileWriter = new OutputStreamWriter(file);
+        /*
+        FileOutputStream outFile = new FileOutputStream("src\\Simple.out");
+        OutputStreamWriter fileWriter = new OutputStreamWriter(outFile);
         BufferedWriter writer = new BufferedWriter(fileWriter);
+        */
 
-        if(!scopeValidator.getError()){
-            EvalVisitor eval = new EvalVisitor();
-            eval.visit(programEntry);
-        }
+        try {
+            if (!scopeValidator.getError()) {
+                EvalVisitor eval = new EvalVisitor();
+                eval.visit(programEntry);
+            }
+        }catch(Exception e)
+        {   System.out.println("Eval Exception occured "+e);}
 
         /*
         //Start of cpp translated code

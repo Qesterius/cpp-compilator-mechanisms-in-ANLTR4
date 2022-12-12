@@ -1,11 +1,9 @@
 int main()
     {
-        matrix test = [ name|score|country from A];
-        test = 1+2;
-        koko = test;
-        while(true)
+        int koko = 1+ 10 + 133;
+        while(1)
         {
-            int wewnetrzny;
+            int wewnetrzny=0;
         }
-        wewnetrzny=1;
+        int zewnetrzny=1;
     }
