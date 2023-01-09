@@ -57,25 +57,18 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
 
     private void validateDeclaration(String varname)
     {
-        System.out.println("VALIDATING DECLARATION OF:"+varname);
-        if(findDeclaration(varname))
-        {
-            System.out.println(varname+ " is de clared multiple times. Hiding previous declartion in this scope..."); /// not error!!
-            //isError=true;
-        }
-            notFinishedOuterScopes.peek().put(varname, new Variable<Object>("") { //needed later, not in validation
-            });
-
+        validateDeclaration(varname,"undefined");
     }
     void validateDeclaration(String varname, String type)
     {
         System.out.println("VALIDATING DECLARATION OF:"+varname);
-        if(findDeclaration(varname))
+        if(findDeclarationInLocalScope(varname))
         {
-            System.out.println(varname+ " is de clared multiple times. Hiding previous declartion in this scope..."); /// not error!!
-            //isError=true;
+            System.out.println(varname+ " is de clared multiple times in this scope!");
+            isError=true;
         }
-            notFinishedOuterScopes.peek().put(varname, new Variable<Object>(type) { //needed later, not in validation
+
+        notFinishedOuterScopes.peek().put(varname, new Variable<Object>(type,) { //needed later, not in validation
             });
 
     }
@@ -105,6 +98,13 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
                 return true;
         }
         return false;
+    }
+    public boolean findDeclarationInLocalScope(String name)
+    {
+        if(notFinishedOuterScopes.empty())
+            return false;
+        HashMap<String, Variable<Object>> map  = notFinishedOuterScopes.peek();
+        return map.containsKey(name);
     }
     //blockitemList visit -> new scope
 }
