@@ -2,15 +2,12 @@ package org.agh.cppinterpreter;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Stack;
 
 public class ValidatorVisitor<T> extends gBaseVisitor<T>{
 
-    List<HashMap<String,Integer>> dfsOrderOfScopes = new ArrayList<>();
-    Stack<HashMap<String,Integer>> notFinishedOuterScopes = new Stack<HashMap<String, Integer>>();
+    Stack<HashMap<String,Variable<Object>>> notFinishedOuterScopes = new Stack<>();
     Boolean isError = false;
 
     public Boolean getError() {
@@ -18,15 +15,13 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
     }
 
     public ValidatorVisitor() {
-        notFinishedOuterScopes.add(new HashMap<String,Integer>());
+        notFinishedOuterScopes.add(new HashMap<String,Variable<Object>>());
     }
 
     @Override public T visitBlockItemList(gParser.BlockItemListContext ctx) {
         System.out.println("OPENING NEW SCOPE");
         notFinishedOuterScopes.add(new HashMap<>());
-        T result = visitChildren(ctx);
-        System.out.println(notFinishedOuterScopes.pop().keySet().stream().toList());
-        return result;
+        return visitChildren(ctx);
     }
     @Override public T visitCompilationUnit(gParser.CompilationUnitContext ctx) {
         System.out.println("VALIDATION START");
@@ -35,6 +30,7 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
 
     @Override public T visitDirectDeclarator(gParser.DirectDeclaratorContext ctx)
     {
+
 
         try{
         if(ctx.directDeclarator() != null)
@@ -64,23 +60,28 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
         System.out.println("VALIDATING DECLARATION OF:"+varname);
         if(findDeclaration(varname))
         {
-            System.out.println(varname+ " is declared multiple times");
-            isError=true;
-        }else
-            notFinishedOuterScopes.peek().put(varname,0);
-
-    }
-
-    public boolean findDeclaration(String name)
-    {
-        if(notFinishedOuterScopes.empty())
-            return false;
-        for (HashMap<String, Integer> map: notFinishedOuterScopes.stream().toList()             ) {
-            if(map.containsKey(name))
-                return true;
+            System.out.println(varname+ " is de clared multiple times. Hiding previous declartion in this scope..."); /// not error!!
+            //isError=true;
         }
-        return false;
+            notFinishedOuterScopes.peek().put(varname, new Variable<Object>("") { //needed later, not in validation
+            });
+
     }
+    void validateDeclaration(String varname, String type)
+    {
+        System.out.println("VALIDATING DECLARATION OF:"+varname);
+        if(findDeclaration(varname))
+        {
+            System.out.println(varname+ " is de clared multiple times. Hiding previous declartion in this scope..."); /// not error!!
+            //isError=true;
+        }
+            notFinishedOuterScopes.peek().put(varname, new Variable<Object>(type) { //needed later, not in validation
+            });
+
+    }
+
+    /// inside declaration should overwrite external declaration
+
 
     @Override public T visitPrimaryExpression(gParser.PrimaryExpressionContext ctx)
     {
@@ -95,7 +96,16 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
         }
         return visitChildren(ctx);
     }
-
+    public boolean findDeclaration(String name)
+    {
+        if(notFinishedOuterScopes.empty())
+            return false;
+        for (HashMap<String, Variable<Object>> map: notFinishedOuterScopes.stream().toList() ) {
+            if(map.containsKey(name))
+                return true;
+        }
+        return false;
+    }
     //blockitemList visit -> new scope
 }
 

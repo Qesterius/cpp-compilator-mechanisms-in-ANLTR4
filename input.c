@@ -1,9 +1,4 @@
 int main()
     {
-        int koko = 1+ 10 + 133;
-        while(1)
-        {
-            int wewnetrzny=0;
-        }
-        int zewnetrzny=1;
+        int koko = 1.0+ 10 * 133+100/51;
     }

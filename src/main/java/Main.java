@@ -6,12 +6,13 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.*;
 
 public class Main {
 //TODO: Translation
-//TODO: Validation of scope execution and declaration of variables
+//TODO: Validation of scope execution and declaration of variables --- DONE but maybe we would like to modify our parsing tree and specify scopes
+//TODO: Promotion of types (?) casting float a = 7 -> 7.0 ...
+
 
     public static void main(String[] args) throws Exception{
         boolean failure=false;
@@ -38,15 +39,16 @@ public class Main {
         ValidatorVisitor<Boolean> scopeValidator = new ValidatorVisitor<>();
         scopeValidator.visitCompilationUnit(programEntry);
 
-        /*
-        FileOutputStream outFile = new FileOutputStream("src\\Simple.out");
+
+
+        FileOutputStream outFile = new FileOutputStream("src\\generated-cpp.cpp");
         OutputStreamWriter fileWriter = new OutputStreamWriter(outFile);
         BufferedWriter writer = new BufferedWriter(fileWriter);
-        */
+
 
         try {
             if (!scopeValidator.getError()) {
-                EvalVisitor eval = new EvalVisitor();
+                EvalVisitor eval = new EvalVisitor(writer);
                 eval.visit(programEntry);
             }
         }catch(Exception e)
