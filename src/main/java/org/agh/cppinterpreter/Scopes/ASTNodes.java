@@ -10,10 +10,10 @@ public class ASTNodes {
         public ScopeContext(ParserRuleContext parent, int invokingState) {
             super(parent, invokingState);
         }
-        public ScopeContext(gParser.BlockItemContext adam)
+        /*public ScopeContext(gParser.BlockItemContext adam)
         {
 
-        }
+        }*/
     }
 
     abstract class ExpressionNode extends gParser.PrimaryExpressionContext
@@ -32,7 +32,7 @@ public class ASTNodes {
             super(parent, invokingState);
         }
     }
-
+/*
     class AdditionNode : InfixExpressionNode
     {
     }
@@ -63,5 +63,5 @@ public class ASTNodes {
     internal class NumberNode : ExpressionNode
     {
         public double Value { get; set; }
-    }
+    }*/
 }

@@ -1,8 +1,7 @@
 package org.agh.cppinterpreter;
 
-import org.antlr.v4.runtime.tree.TerminalNode;
-
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Stack;
 
 public class ValidatorVisitor<T> extends gBaseVisitor<T>{
@@ -28,7 +27,7 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
         return visitChildren(ctx);
     }
 
-    @Override public T visitDirectDeclarator(gParser.DirectDeclaratorContext ctx)
+/*    @Override public T visitDirectDeclarator(gParser.DirectDeclaratorContext ctx)
     {
 
 
@@ -53,13 +52,30 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
         }
 
         return super.visitDirectDeclarator(ctx);
+    }*/
+    @Override
+    public T visitDeclaration(gParser.DeclarationContext ctx) {
+
+        try{
+            String type =ctx.declarationSpecifiers().declarationSpecifier().get(0).typeSpecifier().getText();
+            String code = ctx.getText();
+            String varname = ctx.initDeclaratorList().initDeclarator().get(0).declarator().getText();
+
+            validateDeclaration(varname,type,code);
+        }catch(Exception e)
+        {
+            System.out.println("EXCEPTION "+e.toString());
+        }
+
+        return super.visitDeclaration(ctx);
     }
 
-    private void validateDeclaration(String varname)
+
+    private void validateDeclaration(String varname, String declarationCode)
     {
-        validateDeclaration(varname,"undefined");
+        validateDeclaration(varname,"undefined",declarationCode);
     }
-    void validateDeclaration(String varname, String type)
+    void validateDeclaration(String varname, String type, String declarationCode)
     {
         System.out.println("VALIDATING DECLARATION OF:"+varname);
         if(findDeclarationInLocalScope(varname))
@@ -68,8 +84,8 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
             isError=true;
         }
 
-        notFinishedOuterScopes.peek().put(varname, new Variable<Object>(type,) { //needed later, not in validation
-            });
+        notFinishedOuterScopes.peek().put(varname, new Variable<>(type, Objects.equals(declarationCode, "") ? type +" "+ varname : declarationCode) { //needed later, not in validation
+        });
 
     }
 

@@ -1,11 +1,9 @@
 package org.agh.cppinterpreter;
 
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.io.BufferedWriter;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.Stack;
 
 public class EvalVisitor extends gBaseVisitor<EvaluatorContainer>{
@@ -31,7 +29,7 @@ public class EvalVisitor extends gBaseVisitor<EvaluatorContainer>{
         notFinishedOuterScopes.add(new Scope());
         this.outputWriter = writer;
     }
-
+/*
     //
     @Override
     public EvaluatorContainer visitAdditiveExpression(gParser.AdditiveExpressionContext ctx) {
@@ -67,11 +65,12 @@ public class EvalVisitor extends gBaseVisitor<EvaluatorContainer>{
         }
         return value;
     }
-
+*/
     @Override
     public EvaluatorContainer visitConstant(gParser.ConstantContext ctx) {
         ///co tutaj; variable ma code bo haszmapa chce, ale tu tez ammy code i po co to i co ococoo
-        return new EvaluatorContainer(ctx.getText(),new Variable("int",,(Object) Integer.valueOf(ctx.getText()))
+        //niepewny czy tutaj ma byc robiona wartosc bo wariable to przy identifierach raczej
+        return new EvaluatorContainer(ctx.getText(),new Variable("int",(Object) Integer.valueOf(ctx.getText()), ctx.getText())
         );
     }
 

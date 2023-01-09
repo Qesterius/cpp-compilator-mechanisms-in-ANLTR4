@@ -27,5 +27,7 @@ public class Variable<Object> {
         }
 
     }
-    boolean compareTypes(Variable Y) -> {this.type.toLowerCase(Locale.ROOT).equals(Y.)}
+    boolean compareTypes(Variable Y) {
+        return this.type.toLowerCase(Locale.ROOT).equals(Y.type.toLowerCase());
+    }
 }
