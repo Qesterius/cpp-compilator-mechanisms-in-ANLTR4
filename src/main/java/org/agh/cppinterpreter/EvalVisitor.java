@@ -1,10 +1,15 @@
 package org.agh.cppinterpreter;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.io.BufferedWriter;
 import java.util.HashMap;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.Stack;
+
+import static java.lang.Math.max;
 
 public class EvalVisitor extends gBaseVisitor<EvaluatorContainer>{
     class Scope {
@@ -29,47 +34,152 @@ public class EvalVisitor extends gBaseVisitor<EvaluatorContainer>{
         notFinishedOuterScopes.add(new Scope());
         this.outputWriter = writer;
     }
-/*
+
+
     //
     @Override
     public EvaluatorContainer visitAdditiveExpression(gParser.AdditiveExpressionContext ctx) {
         EvaluatorContainer evalChild = visit(ctx.getChild(0));
-        Number value = (Number) evalChild.value.value;
+        Integer mode=0; //0- Int; 1-Float; 2-Double; 3-String;
+
+        for(int i=0;i<ctx.getChildCount();i+=2)
+            {
+                EvaluatorContainer child = visit(ctx.getChild(i));
+                int curmode = switch (child.value.type.toLowerCase(Locale.ROOT)) {
+                    case "int" -> 0;
+                    case "float" -> 1;
+                    case "double" -> 2;
+                    case "string" -> 3;
+                    default -> -1;
+                };
+                if(curmode!=mode)
+                {
+                    mode = max(curmode,mode);
+                }
+
+            }
+
+        Object value;
+        switch(mode)
+        {
+            case 0: value = (Integer) evalChild.value.value;break;
+            case 1: value = (Float) evalChild.value.value;break;
+            case 2: value = (Double) evalChild.value.value;break;
+            case 3: value = new String((String) evalChild.value.value);break;
+            default: System.out.println("Type of evaluation is unidentifable. Line  "+ctx.getStart().getLine());
+            return new EvaluatorContainer("ERROR",null);
+        }
         String code = evalChild.code;
 
             for(int i=1;i<ctx.getChildCount();i+=2){
+                EvaluatorContainer nchild = visit(ctx.getChild(i+1));
+
                 if(Objects.equals(((TerminalNode) ctx.getChild(i)).getSymbol().getText(), "+")){
-                    EvaluatorContainer nchild = visit(ctx.getChild(i+1));
-                    value += (Number) nchild.value.value;
+                    switch(mode)
+                    {
+                        case 0: value = (Integer) value + (Integer) evalChild.value.value;break;
+                        case 1: value = (Float) value +(Float) evalChild.value.value;break;
+                        case 2: value = (Double) value +(Double) evalChild.value.value;break;
+                        case 3: value = new String((String) value +(String) evalChild.value.value);break;
+                    }
                     code += "+"+nchild.code;
                 }else{
-
-                    EvaluatorContainer nchild = visit(ctx.getChild(i+1));
-                    value -= (Number) nchild.value.value;
+                    switch(mode)
+                    {
+                        case 0: value = (Integer) value - (Integer) evalChild.value.value;break;
+                        case 1: value = (Float) value -(Float) evalChild.value.value;break;
+                        case 2: value = (Double) value -(Double) evalChild.value.value;break;
+                        case 3: System.out.println("Incorrect operator to use with type String. Line  "+ctx.getStart().getLine());
+                        return new EvaluatorContainer("ERROR",null);
+                    }
                     code += "-" +nchild.code;
                 }
             }
-            return new EvaluatorContainer(code,new Variable(value));
+            String type = switch(mode){
+                case 0->"int";
+                case 1->"float" ;
+                case 2->"double";
+                case 3->"string";
+                default -> "undefined";
+            };
+            return new EvaluatorContainer(code,new Variable(type,value,code));
         }
 
 
     @Override
     public EvaluatorContainer visitMultiplicativeExpression(gParser.MultiplicativeExpressionContext ctx) {
-        int value=visit(ctx.getChild(0));
+        EvaluatorContainer evalChild = visit(ctx.getChild(0));
+        Integer mode=0; //0- Int; 1-Float; 2-Double; 3-String;
+
+        for(int i=0;i<ctx.getChildCount();i+=2)
+        {
+            EvaluatorContainer child = visit(ctx.getChild(i));
+            int curmode = switch (child.value.type.toLowerCase(Locale.ROOT)) {
+                case "int" -> 0;
+                case "float" -> 1;
+                case "double" -> 2;
+                case "string" -> 3;
+                default -> -1;
+            };
+            if(curmode!=mode)
+            {
+                mode = max(curmode,mode);
+            }
+
+        }
+
+        Object value;
+        switch(mode)
+        {
+            case 0: value = (Integer) evalChild.value.value;break;
+            case 1: value = (Float) evalChild.value.value;break;
+            case 2: value = (Double) evalChild.value.value;break;
+            case 3: value = new String((String) evalChild.value.value);break;
+            default: System.out.println("Type of evaluation is unidentifable. Line  "+ctx.getStart().getLine());
+                return new EvaluatorContainer("ERROR",null);
+        }
+        String code = evalChild.code;
+
         for(int i=1;i<ctx.getChildCount();i+=2){
+            EvaluatorContainer nchild = visit(ctx.getChild(i+1));
+
             if(Objects.equals(((TerminalNode) ctx.getChild(i)).getSymbol().getText(), "*")){
-                value*=visit(ctx.getChild(i+1));
+                switch(mode)
+                {
+                    case 0: value = (Integer) value * (Integer) evalChild.value.value;break;
+                    case 1: value = (Float) value *(Float) evalChild.value.value;break;
+                    case 2: value = (Double) value *(Double) evalChild.value.value;break;
+                    case 3: System.out.println("Incorrect operator to use with type String. Line  "+ctx.getStart().getLine());
+                    return new EvaluatorContainer("ERROR",null);
+                }
+                code += "*"+nchild.code;
             }else{
-                value/=visit(ctx.getChild(i+1));
+                switch(mode)
+                {
+                    case 0: value = (Integer) value / (Integer) evalChild.value.value;break;
+                    case 1: value = (Float) value /(Float) evalChild.value.value;break;
+                    case 2: value = (Double) value /(Double) evalChild.value.value;break;
+                    case 3: System.out.println("Incorrect operator to use with type String. Line  "+ctx.getStart().getLine());
+                    return new EvaluatorContainer("ERROR",null);
+                }
+                code += "/" +nchild.code;
             }
         }
-        return value;
+        String type = switch(mode){
+            case 0->"int";
+            case 1->"float" ;
+            case 2->"double";
+            case 3->"string";
+            default -> "undefined";
+        };
+        return new EvaluatorContainer(code,new Variable(type,value,code));
     }
 */
     @Override
     public EvaluatorContainer visitConstant(gParser.ConstantContext ctx) {
         ///co tutaj; variable ma code bo haszmapa chce, ale tu tez ammy code i po co to i co ococoo
-        //niepewny czy tutaj ma byc robiona wartosc bo wariable to przy identifierach raczej
+        //
+        ///trzeba dac obsluge innych literalow
         return new EvaluatorContainer(ctx.getText(),new Variable("int",(Object) Integer.valueOf(ctx.getText()), ctx.getText())
         );
     }
@@ -84,7 +194,7 @@ public class EvalVisitor extends gBaseVisitor<EvaluatorContainer>{
     @Override
     public EvaluatorContainer visitInitializer(gParser.InitializerContext ctx) {
         EvaluatorContainer val = super.visitInitializer(ctx);
-        System.out.println(val.value);
+        System.out.println(val.value.code+" "+val.value.value);
         return val;
     }
     @Override
