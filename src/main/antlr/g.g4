@@ -5,7 +5,6 @@ prog:compilationUnit;
 primaryExpression
     :   Identifier
     |   constant
-    |   StringLiteral+
     |   '(' expression ')'
     |   query
     ;
@@ -544,6 +543,7 @@ HexQuad
 constant
     :   IntegerConstant
     |   FloatingConstant
+    | StringLiteral+
     //|   EnumerationConstant
     |   CharacterConstant
     ;

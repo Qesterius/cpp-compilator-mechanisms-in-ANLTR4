@@ -1,7 +1,4 @@
-import org.agh.cppinterpreter.EvalVisitor;
-import org.agh.cppinterpreter.ValidatorVisitor;
-import org.agh.cppinterpreter.gLexer;
-import org.agh.cppinterpreter.gParser;
+import org.agh.cppinterpreter.*;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -19,6 +16,7 @@ public class Main {
         CharStream input = null;
         FileInputStream file = null;
         //Antlr setup for parsing
+        System.out.println(args[0]);
         try {
             file = new FileInputStream(args[0]);
         }catch(FileNotFoundException fnf)
@@ -39,11 +37,15 @@ public class Main {
         ValidatorVisitor<Boolean> scopeValidator = new ValidatorVisitor<>();
         scopeValidator.visitCompilationUnit(programEntry);
 
+        TypeCheckVisitor<Boolean> typeValidator = new TypeCheckVisitor<>();
+        typeValidator.visitCompilationUnit(programEntry);
+
 
 
         FileOutputStream outFile = new FileOutputStream("src\\generated-cpp.cpp");
         OutputStreamWriter fileWriter = new OutputStreamWriter(outFile);
         BufferedWriter writer = new BufferedWriter(fileWriter);
+
 
 
         try {

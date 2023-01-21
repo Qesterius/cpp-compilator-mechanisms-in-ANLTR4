@@ -1,4 +1,4 @@
 int main()
     {
-        int koko = 1.0+ 10 * 133+100/51;
+        int a = 5+b;
     }
