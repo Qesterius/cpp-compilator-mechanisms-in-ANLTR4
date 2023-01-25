@@ -17,9 +17,37 @@ static class Memory
         void* value;
     };
 
-    std::vector<std::map<std::string, Variable>> variables;
-    std::vector<std::map<std::string, Variable>> functionInvocations; // idk hwo it should look in the end ... :ppp
+    struct Function
+    {
+        int id;
+        int startLine;
+        int endLine;
+    };
 
+    
+    std::vector<std::map<std::string, Variable>> variables;
+    std::map<std::string, int> staticGlobalIntegers; // idk hwo it should look in the end ... :ppp
+    //STATIC INTEGERS INTERNAL
+    void setStaticGlobalIntegers(std::string name, int value)
+    {
+        staticGlobalIntegers[name] =value;
+    }
+    int getStaticGlobalInteger(std::string name)
+    {
+        return staticGlobalIntegers[name];
+    }
+    //STATIC INTEGERS INTERFACE
+    int getFunctionInvocationID(std::string name)
+    {
+        auto finder =staticGlobalIntegers.find(name);
+        if(finder == staticGlobalIntegers.end())
+        {
+            staticGlobalIntegers[name] =0;
+        }
+        staticGlobalIntegers[name]+=1;
+        return staticGlobalIntegers[name];
+    }
+    
     //SCOPE MANIPULATION
     void createNewScope()
         { 
@@ -42,7 +70,6 @@ static class Memory
     }
     
     //VARIABLES ALLOCATION
-
     template <typename T>
     void addVariable(std::string name, T value, std::map<std::string,Variable> &scope )
     {
@@ -52,11 +79,26 @@ static class Memory
             
             printLog("Added new variable");
     }
+    
+    template <typename T>
+    void addVariable(std::string name, std::map<std::string,Variable> &scope ) //without value but knowing type of Var
+    {
+            T* variable_ptr = (T*) malloc(sizeof(T));
+            scope[name] = { variable_ptr };
+            
+            printLog("Added new variable without set value");
+    }
     template <typename T>
     void addVariableToLocalScope(std::string name, T value)
     {
         addVariable(name,value,variables.back());
     }
+    template <typename T>
+    void addVariableToLocalScope(std::string name)
+    {
+        addVariable(name,variables.back());
+    }
+
 
     //VARIABLE GET
     Variable& getVariableFromKScope(std::string name,int K){
@@ -107,6 +149,7 @@ static class Memory
 
 int main()
 {
+    /*
     memory.createNewScope();
     memory.addVariableToLocalScope("abba",'1');
     memory.printMemory();
@@ -121,6 +164,37 @@ int main()
     memory.printMemory();
     //*(char*)memory.getLocalVariable("abba1") = ;
     memory.printMemory();
+    */
+
+   //name of funciton return is held in 
+
+
+    /*
+     int C = fun1(a) + fun2(b);
+      | going in direction to leaf it should be executed in that order
+      |      arguments a in fun 1 -> fun1 -> 
+      |      arguments in fun2 b -> fun2 -> 
+      |      additive operation -> allocation of C
+      v
+    addVariable(fun1execStaticINT pointerToTypeOfFunction) // return  -> pointerToTypeOF.. = *returnValue
+    createNewScope();
+    allocate arguments 
+    foreach argument generate line
+    addVariable(argumentName,value)
+    ...
+    addVariable "__return", lineOfStart
+    goto function
+    popFunctionScope
+    int C = getVariable<Int>( fun1execStaticINT) + getVariable(...) 
+
+    addFunctionTo
+    functioncode:
+    goto functionEnd:
+    //ENTRYPOINT
+    return ... ->     
+    */
+    memory.addVariable("functionName+argumentTypes"+memory.getFunctionInvocationID("functionName+argumentTypes"));
+
 
     return 0;
 }

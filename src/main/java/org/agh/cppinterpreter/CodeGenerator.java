@@ -1,6 +1,9 @@
 package org.agh.cppinterpreter;
 
 public class CodeGenerator {
+    public static char[] core() {
+    }
+
     String baseClassCode()
     {
         return """

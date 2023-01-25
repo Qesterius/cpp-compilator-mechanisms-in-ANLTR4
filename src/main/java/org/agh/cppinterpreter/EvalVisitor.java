@@ -267,6 +267,7 @@ public class EvalVisitor extends gBaseVisitor<EvaluatorContainer>{
         });
 
     }
+    /*
     String createScopeVariables(Scope scope)
     {
         String mapName= "scopeID"+ scope.id;
@@ -277,6 +278,6 @@ public class EvalVisitor extends gBaseVisitor<EvaluatorContainer>{
                     out.append(value.code+";"+mapName + "[" + key + "] = " + "&"+key + ";");
                 });
         return out.toString();
-    }
+    }*/
 
 }

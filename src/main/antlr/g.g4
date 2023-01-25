@@ -108,7 +108,7 @@ constantExpression
     ;
 
 declaration
-    :   declarationSpecifiers initDeclaratorList? ';'
+    :   declarationSpecifiers initDeclaratorList+ ';'
     ;
 
 declarationSpecifiers
@@ -341,7 +341,7 @@ blockItemList
 blockItem
     :   statement
     |   declaration
-    |   functionDefinition
+  //  |   functionDefinition
     ;
 
 expressionStatement
