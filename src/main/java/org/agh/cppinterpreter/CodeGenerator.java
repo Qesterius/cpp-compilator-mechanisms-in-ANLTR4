@@ -1,8 +1,26 @@
 package org.agh.cppinterpreter;
 
 public class CodeGenerator {
-    public static char[] core() {
+    public static String core() {
+        return "";//baseclass code tutaj
     }
+
+    public static String declareLocalVariable(String type, String varname) {
+        return "";
+    }
+    public static String getLocalVariable(String type, String varname) {
+        return "";
+    }
+
+    public static String getParentVariable(String type, String varname) {
+        return "";
+    }
+
+    public static String generateFunctionInvocation(String type, String varname) {
+        return "TODO W CPP";
+    }
+
+
 
     String baseClassCode()
     {
