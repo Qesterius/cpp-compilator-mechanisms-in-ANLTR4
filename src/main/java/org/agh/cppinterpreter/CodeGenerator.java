@@ -20,6 +20,8 @@ public class CodeGenerator {
         return "TODO W CPP";
     }
 
+    public static String setLocalVariable(String varname, String childrenCode) {
+    }
 
 
     String baseClassCode()
