@@ -341,6 +341,7 @@ blockItemList
 blockItem
     :   statement
     |   declaration
+    |   functionDefinition
     ;
 
 expressionStatement
