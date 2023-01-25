@@ -2,6 +2,7 @@ package org.agh.cppinterpreter;
 
 
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.HashMap;
@@ -14,7 +15,7 @@ import static java.lang.Math.max;
 
 public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
 
-    Stack<HashMap<String,Variable<Object>>> notFinishedOuterScopes = new Stack<>();
+    Stack<HashMap<String,Integer>> notFinishedOuterScopes = new Stack<>();
     Boolean isError = false;
 
     public Boolean getError() {
@@ -22,7 +23,7 @@ public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
     }
 
     public TypeCheckVisitor() {
-        notFinishedOuterScopes.add(new HashMap<String,Variable<Object>>());
+        notFinishedOuterScopes.add(new HashMap<String,Integer>());
     }
 
     @Override public Integer visitBlockItemList(gParser.BlockItemListContext ctx) {
@@ -65,7 +66,13 @@ public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
     public Integer visitDeclaration(gParser.DeclarationContext ctx) {
 
         try{
-            String type = (String) ctx.declarationSpecifiers().declarationSpecifier().get(0).typeSpecifier().getText();
+            String typetemp = (String) ctx.declarationSpecifiers().declarationSpecifier().get(0).typeSpecifier().getText();
+            int type = gParser.IntegerConstant;
+            switch (typetemp){
+                case "int": type=gParser.IntegerConstant; break;
+                case "float": type=gParser.FloatingConstant; break;
+                case "string": type=gParser.StringLiteral; break;
+            }
             String code = (String) ctx.getText();
             String varname = (String) ctx.initDeclaratorList().initDeclarator().get(0).declarator().getText();
 
@@ -81,7 +88,6 @@ public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
     @Override
     public Integer visitAdditiveExpression(gParser.AdditiveExpressionContext ctx) {
         Integer type=visit(ctx.getChild(0));
-        System.out.println(type);
         for(int i=2;i<ctx.getChildCount();i+=2)
         {
             Integer childType = visit(ctx.getChild(i));
@@ -106,16 +112,12 @@ public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
                 System.out.println("Invalid type, required: "+type+", provided: "+childType);
                 isError = true;
             }
-
         }
         return type;
     }
 
-    private void validateDeclaration(String varname, String declarationCode)
-    {
-        validateDeclaration(varname,(String) "undefined",declarationCode);
-    }
-    void validateDeclaration(String varname, String type, String declarationCode)
+
+    void validateDeclaration(String varname, int type, String declarationCode)
     {
         System.out.println("VALIDATING DECLARATION OF:"+varname);
         if(findDeclarationInLocalScope(varname))
@@ -124,8 +126,7 @@ public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
             isError=true;
         }
 
-        notFinishedOuterScopes.peek().put(varname, new Variable<Object>((java.lang.String) type, Objects.equals(declarationCode, "") ? type +" "+ varname : (java.lang.String) declarationCode) { //needed later, not in validation
-        });
+        notFinishedOuterScopes.peek().put(varname, (Integer) new java.lang.Integer(type));
 
     }
 
@@ -142,6 +143,8 @@ public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
         return (Integer) new java.lang.Integer(symbol.getType());
     }
 
+
+
     @Override public Integer visitPrimaryExpression(gParser.PrimaryExpressionContext ctx)
     {
         if(ctx.Identifier() != null) {
@@ -151,15 +154,78 @@ public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
             if (!findDeclaration(varname)) {
                 System.out.println(varname + " is not declared in this scope");
                 isError = true;
+            }else{
+                return idType(varname);
             }
+
+        }
+        if(ctx.expression() != null){
+            return visit(ctx.expression());
         }
         return visitChildren(ctx);
     }
+
+    public Integer idType(String name){
+        return notFinishedOuterScopes.peek().get(name);
+    }
+    public Integer tokenSymbol(ParseTree ch){
+        TerminalNode tnode = (TerminalNode) ch;
+        Token symbol = tnode.getSymbol();
+        return (Integer) new java.lang.Integer(symbol.getType());
+    }
+
+    void checkTypes(ParseTree ctx, int line){
+            Integer type1 = visit(ctx.getChild(0));
+            Integer type2 = visit(ctx.getChild(2));
+            if(!type1.equals(type2)){
+                System.out.println("TypeError in line " +line+": Can't compare type "+type1+" with type "+type2);
+            }
+
+    }
+
+
+    @Override
+    public Integer visitEqualityExpression(gParser.EqualityExpressionContext ctx) {
+        if(ctx.getChildCount()>1) {
+            checkTypes(ctx,ctx.getStart().getLine());
+            return (Integer) new java.lang.Integer(gParser.Bool);
+        }
+
+
+        return super.visitEqualityExpression(ctx);
+    }
+
+    @Override
+    public Integer visitRelationalExpression(gParser.RelationalExpressionContext ctx) {
+        if(ctx.getChildCount()>1) {
+            checkTypes(ctx,ctx.getStart().getLine());
+            return (Integer) new java.lang.Integer(gParser.Bool);
+        }
+
+
+        return super.visitRelationalExpression(ctx);
+    }
+
+    @Override
+    public Integer visitLogicalAndExpression(gParser.LogicalAndExpressionContext ctx) {
+        if(ctx.getChildCount()>1){
+
+            Integer type1 = visit(ctx.getChild(0));
+            Integer type2 = visit(ctx.getChild(2));
+            Integer tt = (Integer) new java.lang.Integer(gParser.Bool);
+            if(!type1.equals(tt) || !type1.equals(tt)){
+                System.out.println("TypeError in line " +ctx.getStart().getLine()+": Required two booleans, provided: "+type1+" and "+type2);
+            }
+            return (Integer) new java.lang.Integer(gParser.Bool);
+        }
+        return super.visitLogicalAndExpression(ctx);
+    }
+
     public boolean findDeclaration(String name)
     {
         if(notFinishedOuterScopes.empty())
             return false;
-        for (HashMap<String, Variable<Object>> map: notFinishedOuterScopes.stream().toList() ) {
+        for (HashMap<String, Integer> map: notFinishedOuterScopes.stream().toList() ) {
             if(map.containsKey(name))
                 return true;
         }
@@ -169,7 +235,7 @@ public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
     {
         if(notFinishedOuterScopes.empty())
             return false;
-        HashMap<String, Variable<Object>> map  = notFinishedOuterScopes.peek();
+        HashMap<String, Integer> map  = notFinishedOuterScopes.peek();
         return map.containsKey(name);
     }
     //blockitemList visit -> new scope

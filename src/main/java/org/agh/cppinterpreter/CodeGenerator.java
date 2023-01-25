@@ -1,30 +1,54 @@
 package org.agh.cppinterpreter;
 
+import java.util.HashMap;
+
 public class CodeGenerator {
     public static String core() {
-        return "";//baseclass code tutaj
+        return baseClassCode();//baseclass code tutaj
+    }
+
+    String typeName(int type){
+        switch(type){
+            case gParser.IntegerConstant -> {
+                return "int";
+            }
+            case gParser.FloatingConstant -> {
+                return "float";
+            }
+            case gParser.Bool -> {
+                return "bool";
+            }
+            case gParser.StringLiteral -> {
+                return "string";
+            }
+
+        }
+        return "undefined";
     }
 
     public static String declareLocalVariable(String type, String varname) {
-        return "";
+        return String.format("memory.addVariableToLocalScope<%s>(\"%s\")\n;", type, varname);
     }
     public static String getLocalVariable(String type, String varname) {
-        return "";
+
+        return String.format("memory.getValueOfVariable<%s>(memory.getVariableFromLocalScope(\"%s\"));\n",type,varname);
     }
 
     public static String getParentVariable(String type, String varname) {
-        return "";
+
+        return String.format("memory.getVariableFromParentScope<%s>(\"%s\");\n",type,varname);
     }
 
     public static String generateFunctionInvocation(String type, String varname) {
         return "TODO W CPP";
     }
 
-    public static String setLocalVariable(String varname, String childrenCode) {
+    public static String setLocalVariable(String varname, String value) {
+        return String.format("memory.assignValueToVariable(memory.getVariableFromLocalScope(\"%s\"),%s);\n",varname,value);
     }
 
 
-    String baseClassCode()
+    static String baseClassCode()
     {
         return """
                                 
