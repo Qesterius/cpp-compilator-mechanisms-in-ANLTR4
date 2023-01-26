@@ -18,6 +18,7 @@ public class Variable<Object> {
         this.type = type;
         this.value = null;
         this.code = code;
+
         switch(type.toLowerCase(Locale.ROOT)){
                 case "int":  break;
                 case "string": break;

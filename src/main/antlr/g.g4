@@ -91,7 +91,7 @@ conditionalExpression
     ;
 
 
-assignmentExpression
+ assignmentExpression
     :   conditionalExpression
     |   unaryExpression '=' assignmentExpression
     |   DigitSequence // for
