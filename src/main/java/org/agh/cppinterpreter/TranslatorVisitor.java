@@ -1,12 +1,7 @@
 package org.agh.cppinterpreter;
 
-import com.ibm.icu.impl.Pair;
-
-import javax.print.DocFlavor;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.Stack;
+import java.util.*;
+import java.util.function.Predicate;
 
 public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
 
@@ -53,6 +48,12 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
             notFinishedOuterScopes.add(new HashMap<>());
             return new StringBuilder("{\n"+visitChildren(ctx)+"}\n");
         }
+        public StringBuilder visitBlockItemListWithoutScopeOpen(gParser.BlockItemListContext ctx) {
+            StringBuilder concat = new StringBuilder();
+            for(int i=0; i<ctx.blockItem().size();i++)
+                concat.append(visit(ctx.blockItem(i)));
+            return new StringBuilder(concat);
+        }
 
         @Override
         public StringBuilder visitDeclaration(gParser.DeclarationContext ctx) {
@@ -64,15 +65,15 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                 type =ctx.declarationSpecifiers().declarationSpecifier().get(0).typeSpecifier().getText();
                 String code = ctx.getText();
                 //can addd functionality to declare multiple in one line;///...
-                varname = ctx.initDeclaratorList().initDeclarator().get(0).declarator().getText();
+                varname = ctx.initDeclaratorList(0).initDeclarator().get(0).declarator().getText();
 
                 validateDeclaration(varname,type,code);
                 output.append(CodeGenerator.declareLocalVariable(type,varname));
 
 
-                if(ctx.initDeclaratorList().initDeclarator(0).initializer() != null)
+                if(ctx.initDeclaratorList(0).initDeclarator(0).initializer() != null)
                 {
-                    StringBuilder childrenCode = visitInitializer(ctx.initDeclaratorList().initDeclarator(0).initializer());
+                    StringBuilder childrenCode = visitInitializer(ctx.initDeclaratorList(0).initDeclarator(0).initializer());
                     output.append(flush());
                     output.append(CodeGenerator.setLocalVariable(varname,childrenCode.toString()));
                 }
@@ -83,7 +84,7 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
             }
 
 
-            return new StringBuilder(CodeGenerator.declareLocalVariable(type,varname));
+            return output;
         }
 
 
@@ -138,12 +139,18 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
         }
     }
 
-
+    String[] IGNOREDFUNCTIONS = new String[]{"printf"};
     @Override
     public StringBuilder visitPostfixExpression(gParser.PostfixExpressionContext ctx) {
-            if(ctx.getChildCount()>0)
+            System.out.println(ctx.getText()+"  " + ctx.getChildCount());
+            if(ctx.getChildCount()>2)
             {//isfunciton
-                if(Objects.equals(ctx.primaryExpression().getText(), "printf"))
+                if(Arrays.stream(IGNOREDFUNCTIONS).anyMatch(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) {
+                        return ctx.primaryExpression().getText().equals(s);
+                    }
+                }))
                     return new StringBuilder(ctx.getText());
                 StringBuilder functionName = new StringBuilder(ctx.primaryExpression().getText());
                 TypeCheckVisitor typeCheck = new TypeCheckVisitor();
@@ -156,7 +163,7 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                                  ) {
                                 String typename = CodeGenerator.typeName((Integer) typeCheck.visit(assexpr));
                                 functionName.append(typename);
-                                argumentText.add(new typeArgumentPair(typename,visitAssignmentExpression(assexpr).toString()));//pair -> class
+                                argumentText.add(new typeArgumentPair(typename,visitAssignmentExpression(assexpr).toString()));
                             }
                         }
                     }
@@ -212,31 +219,34 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
         //blockitemList visit -> new scope
 
 
-
-
-
     @Override
     public StringBuilder visitCompilationUnit(gParser.CompilationUnitContext ctx) {
-        return new StringBuilder().append(CodeGenerator.core()+super.visitCompilationUnit(ctx).toString());
+        StringBuilder out = new StringBuilder();
+        for(int i=0; i<ctx.translationUnit().children.size();i++)
+            out.append(visit(ctx.translationUnit().getChild(i)));
+        System.out.println(out.toString()) ;
+        return new StringBuilder().append(CodeGenerator.core()+ out.toString());
     }
 
     class FunctionData{
-            ArrayList<String> argumentNames;
-            public FunctionData(ArrayList<String> argumentNames,types)
+        ArrayList<String> argumentTypes;
+        ArrayList<String> argumentNames;
+            public FunctionData(ArrayList<String> argumentNames, ArrayList<String> argTypes)
             {
                 this.argumentNames = argumentNames;
-                this.argumentTypes = types;
+                this.argumentTypes = argTypes;
             }
     }
     @Override
-    public StringBuilder visitFunctionDefinition(gParser.FunctionDefinitionContext ctx) {
+    public StringBuilder visitFunctionDefinition(gParser.FunctionDefinitionContext ctx)
+    {
+        String type = ctx.declarationSpecifiers().getText();
+        StringBuilder name = new StringBuilder(ctx.declarator().directDeclarator().directDeclarator().getText());
+        ArrayList<String> argNames = new ArrayList<>();
+        ArrayList<String> argTypes = new ArrayList<>();
+        notFinishedOuterScopes.add(new HashMap<>());
 
-            String type = ctx.declarationSpecifiers().getText();
-            StringBuilder name = new StringBuilder(ctx.declarator().directDeclarator().directDeclarator().getText());
-            ArrayList<String> argNames = new ArrayList<>();
-            ArrayList<String> argTypes = new ArrayList<>();
-            notFinishedOuterScopes.add(new HashMap<>());
-            if(ctx.declarator().directDeclarator().parameterTypeList() != null)
+        if(ctx.declarator().directDeclarator().parameterTypeList() != null)
         {
             for (var parameter:ctx.declarator().directDeclarator().parameterTypeList().parameterList().parameterDeclaration() ){
                 name.append(parameter.declarationSpecifiers().getText());
@@ -245,18 +255,18 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
             }
         }
 
-        notFinishedOuterScopes.peek().put(name.toString(),new Variable<>(type,(Object)(new FunctionData(argNames)),ctx.getText()));
+        notFinishedOuterScopes.peek().put(name.toString(),new Variable<>(type,(Object)(new FunctionData(argNames, argTypes)),ctx.getText()));
         StringBuilder code = new StringBuilder();
         code.append("void "+ name+ "(){\n");
         for(int i=0; i<argNames.size();i++)
         {
             code.append(CodeGenerator.declareLocalVariable(argTypes.get(i),argNames.get(i)));
-            code.append(CodeGenerator.setLocalVariable(argNames.get(i),CodeGenerator.getLocalVariable(argTypes.get(i),"__arg"+i));
+            code.append(CodeGenerator.setLocalVariable(argNames.get(i),CodeGenerator.getLocalVariable(argTypes.get(i),"__arg"+i)));
             validateDeclaration(argNames.get(i),argTypes.get(i),"");
         }
-        code.append(visitBlockItemList(ctx.compoundStatement().blockItemList()));
+        code.append(visitBlockItemListWithoutScopeOpen(ctx.compoundStatement().blockItemList()));
         code.append(" return;\n}");
 
-        return super.visitFunctionDefinition(ctx);
+        return code;
     }
 }

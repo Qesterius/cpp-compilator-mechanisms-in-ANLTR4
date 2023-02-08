@@ -59,7 +59,7 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
         try{
             String type =ctx.declarationSpecifiers().declarationSpecifier().get(0).typeSpecifier().getText();
             String code = ctx.getText();
-            String varname = ctx.initDeclaratorList().initDeclarator().get(0).declarator().getText();
+            String varname = ctx.initDeclaratorList(0).initDeclarator().get(0).declarator().getText();
 
             validateDeclaration(varname,type,code);
         }catch(Exception e)

@@ -1,4 +1,12 @@
+int customfun(int a)
+{
+    printf("%d",a);
+    return a;
+}
+
 int main()
-    {
-        int a = 5+b;
+   {
+        customfun(1);
+        int b=1;
+        int a;
     }

@@ -27,7 +27,10 @@ public class CodeGenerator {
     }
 
     public static String declareLocalVariable(String type, String varname) {
-        return String.format("memory.addVariableToLocalScope<%s>(\"%s\")\n;", type, varname);
+        return String.format("memory.addVariableToLocalScope<%s>(\"%s\");\n", type, varname);
+    }
+    public static String declareLocalVariableWithValue(String type, String varname, String value) {
+        return String.format("memory.addVariableToLocalScope<%s>(\"%s\", %s);\n", type, varname,value);
     }
     public static String getLocalVariable(String type, String varname) {
 
@@ -35,25 +38,29 @@ public class CodeGenerator {
     }
 
     public static String getParentVariable(String type, String varname) {
-
         return String.format("memory.getVariableFromParentScope<%s>(\"%s\");\n",type,varname);
     }
+    public static String createNewScope() {
+        return "memory.createNewScope();\n";
+    }
+
 
     public static String generateFunctionInvocation(String type, String varname, ArrayList<TranslatorVisitor.typeArgumentPair> aguments) {
         StringBuilder bldr = new StringBuilder();
         bldr.append(String.format("memory.setStaticGlobalInteger(\"tmp\",memory.getFunctionInvocationID(\"%s\"));\n",varname));
         bldr.append(String.format("memory.addVariableToLocalScope<%s>(%s+memory.getStaticGlobalInteger(\"tmp\"));\n",type,varname)); //variable for fucntion return invocation
-        bldr.append("memory.createNewScope();\n");
-        bldr.append("memory.addVariableToLocalScope<int>(\"__invocationId\", memory.getStaticGlobalInteger(\"tmp\"));\n");
-        bldr.append("memory.addVariableToLocalScope<%s>(\"__returnValue\");\n");
+        bldr.append(createNewScope());
+        bldr.append(declareLocalVariableWithValue("int","__invocationId", "memory.getStaticGlobalInteger(\"tmp\")"));
+        bldr.append(declareLocalVariable(type,"__returnValue"));
 
         for (int i = 0; i < aguments.size(); i++) {
             bldr.append(CodeGenerator.declareLocalVariable(aguments.get(i).type,"__arg"+i));
             bldr.append(CodeGenerator.setLocalVariable("__arg"+i,aguments.get(i).value));
         }
-        bldr.append("memory.addVariableToLocalScope<%s>(\"__returnValue\");\n");
 
-        bldr.append("void "+varname+"();\n");
+        bldr.append("memory.addVariableToLocalScope<>(\"__returnValue\");\n",);
+        bldr.append(varname+"();\n");
+        bldr.append("SET VARIABLE RETURN TO POINTER\n");
 
 
 

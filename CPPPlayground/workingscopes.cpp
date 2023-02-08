@@ -107,9 +107,28 @@ static class Memory
 
 int main()
 {
+    foijajoifjasi
+    jfsiadofsao
+
+    int a = dup( [returnadrres ] );
+
+
+    void ujfdiuasj()
+    {
+
+
+
+        
+    }
+
     memory.createNewScope();
     memory.addVariableToLocalScope("abba",'1');
     memory.printMemory();
+    memory.addVariableToLocalScope<int>("abbaint");
+    memory.setVarmoiasfodja<int>();
+
+print(memory.getValueOfVariab<int>("a"));
+
     memory.assignValueToVariable<int>(memory.getVariableFromLocalScope("abba"),10);
     memory.printMemory();
     memory.createNewScope();

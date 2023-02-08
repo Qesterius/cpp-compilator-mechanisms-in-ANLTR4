@@ -36,13 +36,20 @@ public class Main {
 
         ValidatorVisitor<Boolean> scopeValidator = new ValidatorVisitor<>();
         scopeValidator.visitCompilationUnit(programEntry);
+        System.out.println("Finished validating scopes");
 
-        TypeCheckVisitor<Boolean> typeValidator = new TypeCheckVisitor<>();
-        typeValidator.visitCompilationUnit(programEntry);
+        //TypeCheckVisitor<Boolean> typeValidator = new TypeCheckVisitor<>();
+        //typeValidator.visitCompilationUnit(programEntry);
 
-
-
-        FileOutputStream outFile = new FileOutputStream("src\\generated-cpp.cpp");
+        //System.out.println("a");
+        FileOutputStream outFile;
+        try {
+            outFile= new FileOutputStream("src\\generated-cpp.cpp");
+        }catch(Exception e)
+        {
+            System.out.println(e.getMessage());
+            return;
+        }
         OutputStreamWriter fileWriter = new OutputStreamWriter(outFile);
         BufferedWriter writer = new BufferedWriter(fileWriter);
 
@@ -56,40 +63,9 @@ public class Main {
         }catch(Exception e)
         {   System.out.println("Eval Exception occured "+e);}
 
-        /*
-        //Start of cpp translated code
-        //writer.write("code segment");
-        //writer.newLine();
+        TranslatorVisitor translatorVisitor = new TranslatorVisitor();
 
-        //Assembly codes generated with EvalVisitor class
-
-        EvalVisitor eval = new EvalVisitor();
-        eval.visit(tree);
-
-        //End of assembly code for exit, print and data variables
-        eval.PrintExit();
-
-        if (eval.IsVisitPrint)
-            eval.CallPrint();
-        eval.PrintData();
-
-
-
-        //Writing output to Simple.out
-        for(int i = 0; i < eval.printList.size(); i++)
-        {
-            writer.write((String) eval.printList.get(i));
-            writer.newLine();
-        }
-
+        writer.write(translatorVisitor.visit(programEntry).toString());
         writer.close();
-
-        //Warning label for Simple.out
-        System.out.println("\n*********************************");
-        System.out.println("*                               *");
-        System.out.println("*  OUTPUT IS IN THE Simple.out  *");
-        System.out.println("*                               *");
-        System.out.println("*********************************");
-        */
     }
 }

@@ -6,12 +6,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.HashMap;
-import java.util.Locale;
-import java.util.Objects;
 import java.util.Stack;
-import java.lang.String;
-
-import static java.lang.Math.max;
 
 public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
 
@@ -36,32 +31,6 @@ public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
         return visitChildren(ctx);
     }
 
-    /*    @Override public T visitDirectDeclarator(gParser.DirectDeclaratorContext ctx)
-        {
-
-
-            try{
-            if(ctx.directDeclarator() != null)
-                return super.visitDirectDeclarator(ctx);
-
-            if(ctx.identifierList() != null && ctx.identifierList().Identifier() != null)
-            for (TerminalNode identif:ctx.directDeclarator().identifierList().Identifier()
-                 ) {
-                String varname =identif.getSymbol().getText();
-                validateDeclaration(varname);
-            }
-            if(ctx.Identifier() != null)
-            {
-                String varname = ctx.Identifier().getSymbol().getText();
-                validateDeclaration(varname);
-            }
-            }catch(Exception e)
-            {
-                System.out.println("EXCEPTION "+e.toString());
-            }
-
-            return super.visitDirectDeclarator(ctx);
-        }*/
     @Override
     public Integer visitDeclaration(gParser.DeclarationContext ctx) {
 
@@ -74,7 +43,7 @@ public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
                 case "string": type=gParser.StringLiteral; break;
             }
             String code = (String) ctx.getText();
-            String varname = (String) ctx.initDeclaratorList().initDeclarator().get(0).declarator().getText();
+            String varname = (String) ctx.initDeclaratorList(0).initDeclarator().get(0).declarator().getText();
 
             validateDeclaration(varname,type,code);
         }catch(Exception e)

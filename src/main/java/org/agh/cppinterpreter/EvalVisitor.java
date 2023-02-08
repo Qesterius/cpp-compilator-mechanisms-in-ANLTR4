@@ -27,16 +27,12 @@ public class EvalVisitor extends gBaseVisitor<EvaluatorContainer>{
             currId+=1;
         }
     }
-    private BufferedWriter outputWriter;
     Stack<Scope> notFinishedOuterScopes = new Stack<>();
     public EvalVisitor(BufferedWriter writer) {
 
         notFinishedOuterScopes.add(new Scope());
-        this.outputWriter = writer;
     }
 
-
-    //
     @Override
     public EvaluatorContainer visitAdditiveExpression(gParser.AdditiveExpressionContext ctx) {
         EvaluatorContainer evalChild = visit(ctx.getChild(0));
@@ -174,7 +170,7 @@ public class EvalVisitor extends gBaseVisitor<EvaluatorContainer>{
         };
         return new EvaluatorContainer(code,new Variable(type,value,code));
     }
-*/
+
     @Override
     public EvaluatorContainer visitConstant(gParser.ConstantContext ctx) {
         ///co tutaj; variable ma code bo haszmapa chce, ale tu tez ammy code i po co to i co ococoo
@@ -202,7 +198,7 @@ public class EvalVisitor extends gBaseVisitor<EvaluatorContainer>{
         try{
             String type =ctx.declarationSpecifiers().declarationSpecifier().get(0).typeSpecifier().getText();
             String code = ctx.getText();
-            String varname = ctx.initDeclaratorList().initDeclarator().get(0).declarator().getText();
+            String varname = ctx.initDeclaratorList(0).initDeclarator().get(0).declarator().getText();
 
             addDeclaration(varname,type,code);
 
