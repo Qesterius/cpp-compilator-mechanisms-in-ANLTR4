@@ -2,6 +2,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <queue>
+//NEWEST
 
 static bool isDebug = true;
 void printLog(std::string out)
@@ -17,18 +19,13 @@ static class Memory
         void* value;
     };
 
-    struct Function
-    {
-        int id;
-        int startLine;
-        int endLine;
-    };
+
 
     
     std::vector<std::map<std::string, Variable>> variables;
-    std::map<std::string, int> staticGlobalIntegers; // idk hwo it should look in the end ... :ppp
+    std::map<std::string, int> staticGlobalIntegers; 
     //STATIC INTEGERS INTERNAL
-    void setStaticGlobalIntegers(std::string name, int value)
+    void setStaticGlobalInteger(std::string name, int value)
     {
         staticGlobalIntegers[name] =value;
     }
@@ -54,6 +51,11 @@ static class Memory
             variables.push_back({});
             printLog("Created scope.");
         }
+    void popScope()
+    {
+            variables.pop_back();
+            printLog("Popped scope.");
+    }
  
     void printMemory()
     {
@@ -99,11 +101,10 @@ static class Memory
         addVariable(name,variables.back());
     }
 
-
     //VARIABLE GET
     Variable& getVariableFromKScope(std::string name,int K){
         int i;
-        for(i=K; i<variables.size();i++ )
+        for(i=K; i>=0;i-- )
           {
             auto finder = variables[i].find(name);
             if(finder != variables[i].end())
@@ -112,15 +113,15 @@ static class Memory
             }
           }
         throw std::runtime_error("Variable not found: " + name);
-    }
+   }
 
     Variable& getVariableFromParentScope(std::string name)
         {   
-            return getVariableFromKScope(name,1);
+            return getVariableFromKScope(name,variables.size()-2);
         }
     Variable& getVariableFromLocalScope(std::string name)
         {   
-            return getVariableFromKScope(name,0);
+            return getVariableFromKScope(name, variables.size()-1 );
         }
      
     
@@ -141,14 +142,32 @@ static class Memory
     }
 
             
-    
 
+    //FUNCTION INCANTATIONS
+    int assignIdNumber(std::string funcitonName){
+        auto currentIdQueue = variables.back().find("__"+funcitonName); 
+        if(currentIdQueue == variables.back().end())
+        {
+            addVariableToLocalScope("__"+funcitonName, std::queue<int>());
+        }
+        int id = getFunctionInvocationID(funcitonName);
+        getValueOfVariable<std::queue<int>>(getVariableFromLocalScope("__"+funcitonName)).push(id);
+        return id;
+    }
+    int resolveIdNumber(std::string functionName)
+    {
+      int fr = getValueOfVariable<std::queue<int>>(getVariableFromLocalScope("__"+functionName)).front();
+      getValueOfVariable<std::queue<int>>(getVariableFromLocalScope("__"+functionName)).pop();
+      return fr; 
+    }
     
 
 } memory;
 
 int main()
 {
+
+        
     /*
     memory.createNewScope();
     memory.addVariableToLocalScope("abba",'1');
@@ -166,11 +185,23 @@ int main()
     memory.printMemory();
     */
 
-   //name of funciton return is held in 
+   //name of funciton return is held in
+
+/*
+    visitdeclarator()
+    addVariale...
+    
+asfoasjoijfsaiofasjifd
+asfjiofjioasfjioasji
+jdosiafjioasijof
+jfsajoifsaoijf
 
 
-    /*
-     int C = fun1(a) + fun2(b);
+
+    setValue(C , pionterfun1(pointera) + pinterfun2(pointerb);
+     int C = 
+     
+     fun1(a) + fun2(b);
       | going in direction to leaf it should be executed in that order
       |      arguments a in fun 1 -> fun1 -> 
       |      arguments in fun2 b -> fun2 -> 
@@ -193,8 +224,14 @@ int main()
     //ENTRYPOINT
     return ... ->     
     */
-    memory.addVariable("functionName+argumentTypes"+memory.getFunctionInvocationID("functionName+argumentTypes"));
+    memory.setStaticGlobalInteger("tmp",memory.getFunctionInvocationID("INVOCATIONffunctionName+argumentTypes"));
 
+    memory.addVariableToLocalScope<int>("INVOCATIONfunctionName+argumentTypes"+memory.getStaticGlobalInteger("tmp")); //variable for fucntion return invocation
+    memory.createNewScope();
+    memory.addVariableToLocalScope<int>("__invocationId", memory.getStaticGlobalInteger("tmp"));
+    memory.addVariableToLocalScope<bool>("argument1Name",false);
+    /* ... line above for each argument passed to function */
+    memory.addVariableToLocalScope<int>("__returnPoint",memory.getk.)
 
     return 0;
 }

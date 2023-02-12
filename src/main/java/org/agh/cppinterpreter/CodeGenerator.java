@@ -25,51 +25,72 @@ public class CodeGenerator {
         }
         return "undefined";
     }
+    public static String setVariableValue(String type, String variableStruct, String value){
+        return String.format("memory.assignValueToVariable<%s>(%s,%s)", type, variableStruct, value);
+    }
 
     public static String declareLocalVariable(String type, String varname) {
-        return String.format("memory.addVariableToLocalScope<%s>(\"%s\");\n", type, varname);
+        return String.format("memory.addVariableToLocalScope<%s>(\"%s\")", type, varname);
     }
     public static String declareLocalVariableWithValue(String type, String varname, String value) {
-        return String.format("memory.addVariableToLocalScope<%s>(\"%s\", %s);\n", type, varname,value);
+        return String.format("memory.addVariableToLocalScope<%s>(\"%s\", %s)", type, varname,value);
     }
     public static String getLocalVariable(String type, String varname) {
 
-        return String.format("memory.getValueOfVariable<%s>(memory.getVariableFromLocalScope(\"%s\"));\n",type,varname);
+        return String.format("memory.getValueOfVariable<%s>(memory.getVariableFromLocalScope(\"%s\"))",type,varname);
+    }
+    public static String setLocalVariable(String varname, String value) {
+        return String.format("memory.assignValueToVariable(memory.getVariableFromLocalScope(\"%s\"),%s)",varname,value);
     }
 
     public static String getParentVariable(String type, String varname) {
-        return String.format("memory.getVariableFromParentScope<%s>(\"%s\");\n",type,varname);
+        return String.format("memory.getVariableFromParentScope<%s>(%s)",type,varname);
     }
     public static String createNewScope() {
-        return "memory.createNewScope();\n";
+        return "memory.createNewScope()";
+    }
+    public static String assignInvocationID(String name)
+    {
+        return String.format("memory.assignIdNumber(%s)",name);
+    }
+    public static String retrieveInvocationID(String name)
+    {
+        return String.format("memory.resolveIdNumber(%s)",name);
     }
 
 
     public static String generateFunctionInvocation(String type, String varname, ArrayList<TranslatorVisitor.typeArgumentPair> aguments) {
         StringBuilder bldr = new StringBuilder();
-        bldr.append(String.format("memory.setStaticGlobalInteger(\"tmp\",memory.getFunctionInvocationID(\"%s\"));\n",varname));
-        bldr.append(String.format("memory.addVariableToLocalScope<%s>(%s+memory.getStaticGlobalInteger(\"tmp\"));\n",type,varname)); //variable for fucntion return invocation
-        bldr.append(createNewScope());
-        bldr.append(declareLocalVariableWithValue("int","__invocationId", "memory.getStaticGlobalInteger(\"tmp\")"));
-        bldr.append(declareLocalVariable(type,"__returnValue"));
+        //push id to queue
+        bldr.append(String.format("memory.setStaticGlobalInteger(\"tmp\",%s);\n", assignInvocationID("\""+varname+"\"")));
+        bldr.append(String.format("memory.addVariableToLocalScope<%s>(\"%s\"+memory.getStaticGlobalInteger(\"tmp\"));\n",type,varname)); //variable for fucntion return invocation
+        bldr.append(createNewScope()+";\n");
+        bldr.append(declareLocalVariableWithValue("int","__invocationId", "memory.getStaticGlobalInteger(\"tmp\")")+";\n");
+        bldr.append(declareLocalVariable(type,"__returnValue")+";\n");
 
         for (int i = 0; i < aguments.size(); i++) {
-            bldr.append(CodeGenerator.declareLocalVariable(aguments.get(i).type,"__arg"+i));
-            bldr.append(CodeGenerator.setLocalVariable("__arg"+i,aguments.get(i).value));
+            bldr.append(CodeGenerator.declareLocalVariable(aguments.get(i).type,"__arg"+i)+";\n");
+            bldr.append(CodeGenerator.setLocalVariable("__arg"+i,aguments.get(i).value)+";\n");
         }
 
-        bldr.append("memory.addVariableToLocalScope<>(\"__returnValue\");\n",);
         bldr.append(varname+"();\n");
-        bldr.append("SET VARIABLE RETURN TO POINTER\n");
-
-
-
+        String functionInvocationFullName = '\"'+varname+'\"'+"+"+getLocalVariable("int","__invocationId");
+        bldr.append(setVariableValue(
+                type,
+                getParentVariable(
+                        type,
+                        functionInvocationFullName
+                ),
+                getLocalVariable(type,"__returnValue"))+";\n");
         return bldr.toString();
     }
 
-    public static String setLocalVariable(String varname, String value) {
-        return String.format("memory.assignValueToVariable(memory.getVariableFromLocalScope(\"%s\"),%s);\n",varname,value);
+    public static String functionInvocationReturnAddress(String funname,String type)
+    {
+        return getLocalVariable(type,String.format("%s+memory.resolveIdNumber(%s)",funname,funname));
     }
+
+
 
 
     static String baseClassCode()
@@ -90,7 +111,8 @@ public class CodeGenerator {
                 static class Memory
                 {
                     public:
-                                
+                               
+                               
                     struct Variable {
                         void* value;
                     };

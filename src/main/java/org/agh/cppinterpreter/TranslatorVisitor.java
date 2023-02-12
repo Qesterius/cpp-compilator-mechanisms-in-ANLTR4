@@ -9,8 +9,8 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
         Boolean isError = false;
         StringBuilder appenderLines = new StringBuilder();
 
-        void addLineAboveOnBottom(String line){appenderLines.append(line);}
-        void addLineAboveOnTopBottom(String line){appenderLines = new StringBuilder(line+appenderLines.toString());}
+        void addLineAboveOnBottom(String line){appenderLines.append(line+";\n");}
+        void addLineAboveOnTopBottom(String line){appenderLines = new StringBuilder(line+";\n"+appenderLines.toString());}
 
     @Override
     public StringBuilder visitBlockItem(gParser.BlockItemContext ctx) {
@@ -46,12 +46,15 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
         @Override public StringBuilder visitBlockItemList(gParser.BlockItemListContext ctx) {
             System.out.println("OPENING NEW SCOPE");
             notFinishedOuterScopes.add(new HashMap<>());
-            return new StringBuilder("{\n"+visitChildren(ctx)+"}\n");
+            StringBuilder concat = new StringBuilder();
+            for(int i=0; i<ctx.blockItem().size();i++)
+                concat.append(visit(ctx.blockItem(i))+";\n");
+            return new StringBuilder("{\n"+concat+"}\n");
         }
         public StringBuilder visitBlockItemListWithoutScopeOpen(gParser.BlockItemListContext ctx) {
             StringBuilder concat = new StringBuilder();
             for(int i=0; i<ctx.blockItem().size();i++)
-                concat.append(visit(ctx.blockItem(i)));
+                concat.append(visit(ctx.blockItem(i))+";\n");
             return new StringBuilder(concat);
         }
 
@@ -151,7 +154,7 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                         return ctx.primaryExpression().getText().equals(s);
                     }
                 }))
-                    return new StringBuilder(ctx.getText());
+                    return new StringBuilder(ctx.getText()); ///TODO: TRZEBA PARSOWAC JESZCZE ARGUMENTY TYCH FUNKCJI, POZA TYLKO NAZWA I ()
                 StringBuilder functionName = new StringBuilder(ctx.primaryExpression().getText());
                 TypeCheckVisitor typeCheck = new TypeCheckVisitor();
                 ArrayList<typeArgumentPair> argumentText  = new ArrayList<>();
@@ -170,11 +173,8 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                 }
                 var functionDeclaration =findAndGetDeclaration(functionName.toString());
                 addLineAboveOnBottom(CodeGenerator.generateFunctionInvocation(functionDeclaration.type,functionName.toString(),argumentText));
-
-                //TODO:get argument names to pass;
-                //or pass them like __arg1 ...
-
-
+                //if not void ... and if its not a statement
+                return new StringBuilder(CodeGenerator.functionInvocationReturnAddress(functionDeclaration.type,functionName.toString()));
 
             }
             else{
@@ -182,8 +182,6 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                 return visitPrimaryExpression(ctx.primaryExpression());
             }
 
-
-            return super.visitPostfixExpression(ctx);
     }
 
         public boolean findDeclaration(String name)
