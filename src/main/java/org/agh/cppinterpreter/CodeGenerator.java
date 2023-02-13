@@ -30,17 +30,17 @@ public class CodeGenerator {
     }
 
     public static String declareLocalVariable(String type, String varname) {
-        return String.format("memory.addVariableToLocalScope<%s>(\"%s\")", type, varname);
+        return String.format("memory.addVariableToLocalScope<%s>(%s)", type, varname);
     }
     public static String declareLocalVariableWithValue(String type, String varname, String value) {
-        return String.format("memory.addVariableToLocalScope<%s>(\"%s\", %s)", type, varname,value);
+        return String.format("memory.addVariableToLocalScope<%s>(%s, %s)", type, varname,value);
     }
     public static String getLocalVariable(String type, String varname) {
 
-        return String.format("memory.getValueOfVariable<%s>(memory.getVariableFromLocalScope(\"%s\"))",type,varname);
+        return String.format("memory.getValueOfVariable<%s>(memory.getVariableFromLocalScope(%s))",type,varname);
     }
     public static String setLocalVariable(String varname, String value) {
-        return String.format("memory.assignValueToVariable(memory.getVariableFromLocalScope(\"%s\"),%s)",varname,value);
+        return String.format("memory.assignValueToVariable(memory.getVariableFromLocalScope(%s),%s)",varname,value);
     }
 
     public static String getParentVariable(String type, String varname) {
@@ -48,6 +48,9 @@ public class CodeGenerator {
     }
     public static String createNewScope() {
         return "memory.createNewScope()";
+    }
+    public static String popScope() {
+        return "memory.popScope()";
     }
     public static String assignInvocationID(String name)
     {
@@ -65,27 +68,28 @@ public class CodeGenerator {
         bldr.append(String.format("memory.setStaticGlobalInteger(\"tmp\",%s);\n", assignInvocationID("\""+varname+"\"")));
         bldr.append(String.format("memory.addVariableToLocalScope<%s>(\"%s\"+memory.getStaticGlobalInteger(\"tmp\"));\n",type,varname)); //variable for fucntion return invocation
         bldr.append(createNewScope()+";\n");
-        bldr.append(declareLocalVariableWithValue("int","__invocationId", "memory.getStaticGlobalInteger(\"tmp\")")+";\n");
-        bldr.append(declareLocalVariable(type,"__returnValue")+";\n");
+        bldr.append(declareLocalVariableWithValue("int","\"__invocationId\"", "memory.getStaticGlobalInteger(\"tmp\")")+";\n");
+        bldr.append(declareLocalVariable(type,"\"__returnValue\"")+";\n");
 
         for (int i = 0; i < aguments.size(); i++) {
-            bldr.append(CodeGenerator.declareLocalVariable(aguments.get(i).type,"__arg"+i)+";\n");
-            bldr.append(CodeGenerator.setLocalVariable("__arg"+i,aguments.get(i).value)+";\n");
+            bldr.append(CodeGenerator.declareLocalVariable(aguments.get(i).type,"\"__arg"+i+"\"")+";\n");
+            bldr.append(CodeGenerator.setLocalVariable("\"__arg"+i+"\"",aguments.get(i).value)+";\n");
         }
 
         bldr.append(varname+"();\n");
-        String functionInvocationFullName = '\"'+varname+'\"'+"+"+getLocalVariable("int","__invocationId");
+        String functionInvocationFullName = '\"'+varname+'\"'+"+"+getLocalVariable("int","\"__invocationId\"");
         bldr.append(setVariableValue(
                 type,
                 getParentVariable(
                         type,
                         functionInvocationFullName
                 ),
-                getLocalVariable(type,"__returnValue"))+";\n");
+                getLocalVariable(type,"\"__returnValue\""))+";\n");
+        bldr.append(popScope()+";\n");
         return bldr.toString();
     }
 
-    public static String functionInvocationReturnAddress(String funname,String type)
+    public static String functionInvocationReturnAddress(String type,String funname)
     {
         return getLocalVariable(type,String.format("%s+memory.resolveIdNumber(%s)",funname,funname));
     }

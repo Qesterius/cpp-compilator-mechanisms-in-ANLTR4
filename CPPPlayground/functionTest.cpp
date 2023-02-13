@@ -89,12 +89,12 @@ static class Memory
     template <typename T>
     void addVariableToLocalScope(std::string name, T value)
     {
-        addVariable(name,value,variables.back());
+        addVariable<T>(name,value,variables.back());
     }
     template <typename T>
     void addVariableToLocalScope(std::string name)
     {
-        addVariable(name,variables.back());
+        addVariable<T>(name,variables.back());
     }
 
     //VARIABLE GET

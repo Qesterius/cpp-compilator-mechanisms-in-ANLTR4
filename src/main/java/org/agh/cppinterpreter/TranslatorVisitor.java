@@ -10,7 +10,7 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
         StringBuilder appenderLines = new StringBuilder();
 
         void addLineAboveOnBottom(String line){appenderLines.append(line+";\n");}
-        void addLineAboveOnTopBottom(String line){appenderLines = new StringBuilder(line+";\n"+appenderLines.toString());}
+        void addLineAboveOnTopBottom(String line){appenderLines = new StringBuilder(line+";\n"+appenderLines.toString()+";\n");}
 
 
     @Override
@@ -33,7 +33,7 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
     public StringBuilder visitJumpStatement(gParser.JumpStatementContext ctx) {
             if(ctx.expression() != null)
             {
-                addLineAboveOnBottom(CodeGenerator.setLocalVariable("__returnValue",visitExpression(ctx.expression()).toString()));
+                addLineAboveOnBottom(CodeGenerator.setLocalVariable("\"__returnValue\"",visitExpression(ctx.expression()).toString()));
             }
             return new StringBuilder("return;\n");
     }
@@ -87,14 +87,14 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                 varname = ctx.initDeclaratorList(0).initDeclarator().get(0).declarator().getText();
 
                 validateDeclaration(varname,type,code);
-                output.append(CodeGenerator.declareLocalVariable(type,varname));
+                output.append(CodeGenerator.declareLocalVariable(type,"\""+varname+"\"")+";\n");
 
 
                 if(ctx.initDeclaratorList(0).initDeclarator(0).initializer() != null)
                 {
                     StringBuilder childrenCode = visitInitializer(ctx.initDeclaratorList(0).initDeclarator(0).initializer());
                     output.append(flush());
-                    output.append(CodeGenerator.setLocalVariable(varname,childrenCode.toString()));
+                    output.append(CodeGenerator.setLocalVariable("\""+varname+"\"",childrenCode.toString()));
                 }
 
             }catch(Exception e)
@@ -141,7 +141,7 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                     isError = true;
                     return new StringBuilder("ERROR");
                 }
-                return new StringBuilder(CodeGenerator.getLocalVariable(variable.type,varname));
+                return new StringBuilder(CodeGenerator.getLocalVariable(variable.type,"\""+varname+"\""));
 
             }else
             {
@@ -189,6 +189,8 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                                  ) {
                                 if(isIgnored)
                                 {
+                                    if(!arguments.isEmpty())
+                                        arguments.append(",");
                                     arguments.append(visitAssignmentExpression(assexpr).toString());
                                 }
                                 else {
@@ -206,7 +208,7 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                 var functionDeclaration =findAndGetDeclaration(functionName.toString());
                 addLineAboveOnBottom(CodeGenerator.generateFunctionInvocation(functionDeclaration.type,functionName.toString(),argumentText));
                 //if not void ... and if its not a statement
-                return new StringBuilder(CodeGenerator.functionInvocationReturnAddress(functionDeclaration.type,functionName.toString()));
+                return new StringBuilder(CodeGenerator.functionInvocationReturnAddress(functionDeclaration.type,"\""+functionName.toString()+"\""));
 
             }
             else{
@@ -286,20 +288,25 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
         }
 
         System.out.println(String.format("Found function declaration: {funname:%s, argtypes:%s, argnames:%s }",name.toString(),argTypes.toString(), argNames.toString()));
-
-
-        notFinishedOuterScopes.peek().put(name.toString(),new Variable<>(type,(Object)(new FunctionData(argNames, argTypes)),ctx.getText()));
         StringBuilder code = new StringBuilder();
-        code.append("void "+ name+ "(){\n");
-        for(int i=0; i<argNames.size();i++)
+        if(name.toString().equals("main"))
         {
-            code.append(CodeGenerator.declareLocalVariable(argTypes.get(i),argNames.get(i))+";\n");
-            code.append(CodeGenerator.setLocalVariable(argNames.get(i),CodeGenerator.getLocalVariable(argTypes.get(i),"__arg"+i))+";\n");
-            validateDeclaration(argNames.get(i),argTypes.get(i),"");
-        }
-        code.append(visitBlockItemListWithoutScopeOpen(ctx.compoundStatement().blockItemList()));
-        code.append(" return;\n}");
+            code.append("int "+ name+ "(){\n");
+            code.append(CodeGenerator.createNewScope()+";\n");
+            code.append(visitBlockItemListWithoutScopeOpen(ctx.compoundStatement().blockItemList()));
+            code.append(" return;\n}");
+        }else {
 
+            notFinishedOuterScopes.peek().put(name.toString(), new Variable<>(type, (Object) (new FunctionData(argNames, argTypes)), ctx.getText()));
+            code.append("void " + name + "(){\n");
+            for (int i = 0; i < argNames.size(); i++) {
+                code.append(CodeGenerator.declareLocalVariable(argTypes.get(i), "\"" + argNames.get(i) + "\"") + ";\n");
+                code.append(CodeGenerator.setLocalVariable("\"" + argNames.get(i) + "\"", CodeGenerator.getLocalVariable(argTypes.get(i), "\"__arg" + i + "\"")) + ";\n");
+                validateDeclaration(argNames.get(i), argTypes.get(i), "");
+            }
+            code.append(visitBlockItemListWithoutScopeOpen(ctx.compoundStatement().blockItemList()));
+            code.append(" return;\n}");
+        }
         return code;
     }
 }
