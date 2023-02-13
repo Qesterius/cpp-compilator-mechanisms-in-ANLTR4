@@ -253,13 +253,16 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
             }
         }
 
+        System.out.println(String.format("Found function declaration: {funname:%s, argtypes:%s, argnames:%s }",name.toString(),argTypes.toString(), argNames.toString()));
+
+
         notFinishedOuterScopes.peek().put(name.toString(),new Variable<>(type,(Object)(new FunctionData(argNames, argTypes)),ctx.getText()));
         StringBuilder code = new StringBuilder();
         code.append("void "+ name+ "(){\n");
         for(int i=0; i<argNames.size();i++)
         {
-            code.append(CodeGenerator.declareLocalVariable(argTypes.get(i),argNames.get(i)));
-            code.append(CodeGenerator.setLocalVariable(argNames.get(i),CodeGenerator.getLocalVariable(argTypes.get(i),"__arg"+i)));
+            code.append(CodeGenerator.declareLocalVariable(argTypes.get(i),argNames.get(i))+";\n");
+            code.append(CodeGenerator.setLocalVariable(argNames.get(i),CodeGenerator.getLocalVariable(argTypes.get(i),"__arg"+i))+";\n");
             validateDeclaration(argNames.get(i),argTypes.get(i),"");
         }
         code.append(visitBlockItemListWithoutScopeOpen(ctx.compoundStatement().blockItemList()));
