@@ -297,7 +297,7 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
             code.append(CodeGenerator.setLocalVariable(argNames.get(i),CodeGenerator.getLocalVariable(argTypes.get(i),"__arg"+i))+";\n");
             validateDeclaration(argNames.get(i),argTypes.get(i),"");
         }
-        code.append("blocklist"+visitBlockItemListWithoutScopeOpen(ctx.compoundStatement().blockItemList())+"blocklist");
+        code.append(visitBlockItemListWithoutScopeOpen(ctx.compoundStatement().blockItemList()));
         code.append(" return;\n}");
 
         return code;

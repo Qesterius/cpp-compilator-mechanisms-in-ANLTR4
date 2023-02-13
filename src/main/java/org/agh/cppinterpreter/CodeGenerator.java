@@ -96,119 +96,167 @@ public class CodeGenerator {
     static String baseClassCode()
     {
         return """
-                                
                 #include <map>
-                #include <iostream>
-                #include <vector>
-                #include <string>
-                                
-                static bool isDebug = true;
-                void printLog(std::string out)
-                {
-                    if(isDebug)
-                        std::cout<< out << std::endl;
-                }
-                static class Memory
-                {
-                    public:
-                               
-                               
-                    struct Variable {
-                        void* value;
-                    };
-                                
-                    std::vector<std::map<std::string, Variable>> variables;
-                    std::vector<std::map<std::string, Variable>> functionInvocations; // idk hwo it should look in the end ... :ppp
-                                
-                    template <typename T>
-                    void addVariable(std::string name, T value, std::map<std::string,Variable> &scope )
-                    {
-                            T* variable_ptr = (T*) malloc(sizeof(T));
-                            *variable_ptr = value;
-                            scope[name] = { variable_ptr };
-                           \s
-                            printLog("Added new variable");
-                    }
-                                
-                    template <typename T>
-                    void assignValueToVariable(Variable& var, T value)
-                    {
-                            *(T*)(var.value) = value;
-                    }
-                                
-                    template <typename T>
-                    void addVariableToLocalScope(std::string name, T value)
-                    {
-                        addVariable(name,value,variables.back());
-                    }
-                                
-                    void printMemory()
-                    {
-                        for(int i=0; i<variables.size();i++)
-                        {
-                            auto stack = variables[i];
-                            std::cout << "Next stack "<< i << " "<< std::endl;
-                                
-                            for(auto var : stack){
-                                std::cout << " " << var.first << ":"<< var.second.value <<"   ";
+                         #include <iostream>
+                         #include <vector>
+                         #include <string>
+                         #include <queue>
+                         //NEWEST
+                         
+                         static bool isDebug = true;
+                         void printLog(std::string out)
+                         {
+                             if(isDebug)
+                                 std::cout<< out << std::endl;
+                         }
+                         static class Memory
+                         {
+                             public:
+                         
+                             struct Variable {
+                                 void* value;
+                             };
+                             std::vector<std::map<std::string, Variable>> variables;
+                             std::map<std::string, int> staticGlobalIntegers;\s
+                             //STATIC INTEGERS INTERNAL
+                             void setStaticGlobalInteger(std::string name, int value)
+                             {
+                                 staticGlobalIntegers[name] =value;
+                             }
+                             int getStaticGlobalInteger(std::string name)
+                             {
+                                 return staticGlobalIntegers[name];
+                             }
+                             //STATIC INTEGERS INTERFACE
+                             int getFunctionInvocationID(std::string name)
+                             {
+                                 auto finder =staticGlobalIntegers.find(name);
+                                 if(finder == staticGlobalIntegers.end())
+                                 {
+                                     staticGlobalIntegers[name] =0;
+                                 }
+                                 staticGlobalIntegers[name]+=1;
+                                 return staticGlobalIntegers[name];
+                             }
+                            \s
+                             //SCOPE MANIPULATION
+                             void createNewScope()
+                                 {\s
+                                     variables.push_back({});
+                                     printLog("Created scope.");
+                                 }
+                             void popScope()
+                             {
+                                     variables.pop_back();
+                                     printLog("Popped scope.");
+                             }
+                         \s
+                             void printMemory()
+                             {
+                                 for(int i=0; i<variables.size();i++)
+                                 {
+                                     auto stack = variables[i];
+                                     std::cout << "Next stack "<< i << " "<< std::endl;
+                         
+                                     for(auto var : stack){
+                                         std::cout << " " << var.first << ":"<< var.second.value <<"   ";
+                                     }
+                                     std::cout<< std::endl;
+                                 }
+                             }
+                            \s
+                             //VARIABLES ALLOCATION
+                             template <typename T>
+                             void addVariable(std::string name, T value, std::map<std::string,Variable> &scope )
+                             {
+                                     T* variable_ptr = (T*) malloc(sizeof(T));
+                                     *variable_ptr = value;
+                                     scope[name] = { variable_ptr };
+                                    \s
+                                     printLog("Added new variable");
+                             }
+                            \s
+                             template <typename T>
+                             void addVariable(std::string name, std::map<std::string,Variable> &scope ) //without value but knowing type of Var
+                             {
+                                     T* variable_ptr = (T*) malloc(sizeof(T));
+                                     scope[name] = { variable_ptr };
+                                    \s
+                                     printLog("Added new variable without set value");
+                             }
+                             template <typename T>
+                             void addVariableToLocalScope(std::string name, T value)
+                             {
+                                 addVariable(name,value,variables.back());
+                             }
+                             template <typename T>
+                             void addVariableToLocalScope(std::string name)
+                             {
+                                 addVariable(name,variables.back());
+                             }
+                         
+                             //VARIABLE GET
+                             Variable& getVariableFromKScope(std::string name,int K){
+                                 int i;
+                                 for(i=K; i>=0;i-- )
+                                   {
+                                     auto finder = variables[i].find(name);
+                                     if(finder != variables[i].end())
+                                     {
+                                        return finder ->second;
+                                     }
+                                   }
+                                 throw std::runtime_error("Variable not found: " + name);
                             }
-                            std::cout<< std::endl;
-                        }
-                    }
-                                
-                    void createNewScope()
-                        {\s
-                            variables.push_back({});
-                            printLog("Created scope.");
-                        }
-                   \s
-                    Vaariable& getVariableFromParentScope(std::string name)
-                        {  \s
-                            return getVariableFromKScope(name,1);
-                        }
-                    Variable& getVariableFromLocalScope(std::string name)
-                        {  \s
-                            return getVariableFromKScope(name,0);
-                        }
-                    \s
-                    template <typename T>
-                    T getValueOfVariable(Variable& var )
-                    {
-                        return *(T*)(var.value);
-                    }
-                                
-                           \s
-                    Variable& getVariableFromKScope(std::string name,int K){
-                        int i;
-                        for(i=K; i<variables.size();i++ )
-                          {
-                            auto finder = variables[i].find(name);
-                            if(finder != variables[i].end())
-                            {
-                               return finder ->second;
-                            }
-                          }
-                        throw std::runtime_error("Variable not found: " + name);
-                    }
-                                
-                   \s
-                                
-                                
-                    /*template <typename T>
-                    T getParentVariable(std::string name)
-                    {
-                       \s
-                        try{getVariableFromKScope<T>(name,1);}
-                        catch(std::runtime_error err)
-                        {
-                            std::string buff;
-                            std:sprintf(buff,"\\"parent %s\\" does not have parent in any of the outer scopes. In that case %s is a nullptr.", name,name);
-                            throw std::runtime_error(buff);
-                        }
-                    }*/
-                                
-                } memory;
-                                
+                         
+                             Variable& getVariableFromParentScope(std::string name)
+                                 {  \s
+                                     return getVariableFromKScope(name,variables.size()-2);
+                                 }
+                             Variable& getVariableFromLocalScope(std::string name)
+                                 {  \s
+                                     return getVariableFromKScope(name, variables.size()-1 );
+                                 }
+                             \s
+                            \s
+                         
+                             //VARIABLE VALUE SET
+                             template <typename T>
+                             void assignValueToVariable(Variable& var, T value)
+                             {
+                                     *(T*)(var.value) = value;
+                             }
+                         
+                         
+                             //VARIABLE VALUE GET\s
+                             template <typename T>
+                             T getValueOfVariable(Variable& var )
+                             {
+                                 return *(T*)(var.value);
+                             }
+                         
+                                    \s
+                         
+                             //FUNCTION INCANTATIONS
+                             int assignIdNumber(std::string funcitonName){
+                                 auto currentIdQueue = variables.back().find("__"+funcitonName);\s
+                                 if(currentIdQueue == variables.back().end())
+                                 {
+                                     addVariableToLocalScope("__"+funcitonName, std::queue<int>());
+                                 }
+                                 int id = getFunctionInvocationID(funcitonName);
+                                 getValueOfVariable<std::queue<int>>(getVariableFromLocalScope("__"+funcitonName)).push(id);
+                                 return id;
+                             }
+                             int resolveIdNumber(std::string functionName)
+                             {
+                               int fr = getValueOfVariable<std::queue<int>>(getVariableFromLocalScope("__"+functionName)).front();
+                               getValueOfVariable<std::queue<int>>(getVariableFromLocalScope("__"+functionName)).pop();
+                               return fr;\s
+                             }
+                            \s
+                         
+                         } memory;       
                 """;
 
     }

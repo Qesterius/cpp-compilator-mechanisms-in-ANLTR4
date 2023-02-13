@@ -18,10 +18,6 @@ static class Memory
     struct Variable {
         void* value;
     };
-
-
-
-    
     std::vector<std::map<std::string, Variable>> variables;
     std::map<std::string, int> staticGlobalIntegers; 
     //STATIC INTEGERS INTERNAL
