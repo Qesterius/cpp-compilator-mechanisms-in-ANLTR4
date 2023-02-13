@@ -12,6 +12,17 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
         void addLineAboveOnBottom(String line){appenderLines.append(line+";\n");}
         void addLineAboveOnTopBottom(String line){appenderLines = new StringBuilder(line+";\n"+appenderLines.toString());}
 
+
+    @Override
+    protected StringBuilder defaultResult() {
+        return new StringBuilder();
+    }
+
+    @Override
+    protected StringBuilder aggregateResult(StringBuilder aggregate, StringBuilder nextResult) {
+        return new StringBuilder(aggregate).append(nextResult);
+    }
+
     @Override
     public StringBuilder visitBlockItem(gParser.BlockItemContext ctx) {
             StringBuilder chldr =super.visitBlockItem(ctx);
@@ -48,13 +59,18 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
             notFinishedOuterScopes.add(new HashMap<>());
             StringBuilder concat = new StringBuilder();
             for(int i=0; i<ctx.blockItem().size();i++)
-                concat.append(visit(ctx.blockItem(i))+";\n");
+                concat.append(visitBlockItem(ctx.blockItem(i))+";\n");
+
             return new StringBuilder("{\n"+concat+"}\n");
         }
         public StringBuilder visitBlockItemListWithoutScopeOpen(gParser.BlockItemListContext ctx) {
             StringBuilder concat = new StringBuilder();
             for(int i=0; i<ctx.blockItem().size();i++)
-                concat.append(visit(ctx.blockItem(i))+";\n");
+            {
+                String child = visitBlockItem(ctx.blockItem(i)).toString();
+                System.out.println(String.format("%d; %s; %s; %s;",i,ctx.blockItem(i),ctx.blockItem(i).getText(),child));
+                concat.append(child+";\n");
+            }
             return new StringBuilder(concat);
         }
 
@@ -148,14 +164,21 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
             System.out.println(ctx.getText()+"  " + ctx.getChildCount());
             if(ctx.getChildCount()>2)
             {//isfunciton
+                StringBuilder functionName = new StringBuilder(ctx.primaryExpression().getText());
+                StringBuilder arguments = new StringBuilder();
+                Boolean isIgnored = false;
+
+                System.out.println("POSTFIX:"+ctx.getText());
                 if(Arrays.stream(IGNOREDFUNCTIONS).anyMatch(new Predicate<String>() {
                     @Override
                     public boolean test(String s) {
-                        return ctx.primaryExpression().getText().equals(s);
+                        return functionName.toString().equals(s);
                     }
                 }))
-                    return new StringBuilder(ctx.getText()); ///TODO: TRZEBA PARSOWAC JESZCZE ARGUMENTY TYCH FUNKCJI, POZA TYLKO NAZWA I ()
-                StringBuilder functionName = new StringBuilder(ctx.primaryExpression().getText());
+                {
+                    isIgnored = true;
+                }
+
                 TypeCheckVisitor typeCheck = new TypeCheckVisitor();
                 ArrayList<typeArgumentPair> argumentText  = new ArrayList<>();
                 if( ctx.argumentExpressionList() !=null) {
@@ -164,13 +187,22 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                         {
                             for (var assexpr: argExpList.assignmentExpression()
                                  ) {
-                                String typename = CodeGenerator.typeName((Integer) typeCheck.visit(assexpr));
-                                functionName.append(typename);
-                                argumentText.add(new typeArgumentPair(typename,visitAssignmentExpression(assexpr).toString()));
+                                if(isIgnored)
+                                {
+                                    arguments.append(visitAssignmentExpression(assexpr).toString());
+                                }
+                                else {
+                                    String typename = CodeGenerator.typeName((Integer) typeCheck.visit(assexpr));
+                                    functionName.append(typename);
+                                    argumentText.add(new typeArgumentPair(typename, visitAssignmentExpression(assexpr).toString()));
+                                }
                             }
                         }
                     }
                 }
+                if( isIgnored)
+                    return new StringBuilder(functionName +"("+ arguments +")");
+
                 var functionDeclaration =findAndGetDeclaration(functionName.toString());
                 addLineAboveOnBottom(CodeGenerator.generateFunctionInvocation(functionDeclaration.type,functionName.toString(),argumentText));
                 //if not void ... and if its not a statement
@@ -265,7 +297,7 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
             code.append(CodeGenerator.setLocalVariable(argNames.get(i),CodeGenerator.getLocalVariable(argTypes.get(i),"__arg"+i))+";\n");
             validateDeclaration(argNames.get(i),argTypes.get(i),"");
         }
-        code.append(visitBlockItemListWithoutScopeOpen(ctx.compoundStatement().blockItemList()));
+        code.append("blocklist"+visitBlockItemListWithoutScopeOpen(ctx.compoundStatement().blockItemList())+"blocklist");
         code.append(" return;\n}");
 
         return code;
