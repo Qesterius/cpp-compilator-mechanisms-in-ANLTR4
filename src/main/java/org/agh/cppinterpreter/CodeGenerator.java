@@ -44,7 +44,7 @@ public class CodeGenerator {
     }
 
     public static String getParentVariable(String type, String varname) {
-        return String.format("memory.getVariableFromParentScope<%s>(%s)",type,varname);
+        return String.format("memory.getVariableFromParentScope(%s)",varname);
     }
     public static String createNewScope() {
         return "memory.createNewScope()";
