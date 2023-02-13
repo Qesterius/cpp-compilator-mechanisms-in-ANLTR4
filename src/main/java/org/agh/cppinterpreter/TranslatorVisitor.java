@@ -294,7 +294,7 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
             code.append("int "+ name+ "(){\n");
             code.append(CodeGenerator.createNewScope()+";\n");
             code.append(visitBlockItemListWithoutScopeOpen(ctx.compoundStatement().blockItemList()));
-            code.append(" return;\n}");
+            code.append(" return 0;\n}");
         }else {
 
             notFinishedOuterScopes.peek().put(name.toString(), new Variable<>(type, (Object) (new FunctionData(argNames, argTypes)), ctx.getText()));
