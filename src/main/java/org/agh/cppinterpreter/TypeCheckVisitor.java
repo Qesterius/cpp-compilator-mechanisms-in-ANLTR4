@@ -20,6 +20,30 @@ public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
     public TypeCheckVisitor() {
         notFinishedOuterScopes.add(new HashMap<String,Integer>());
     }
+    public TypeCheckVisitor(Stack<HashMap<String,Variable<Object>>> nf) {
+        notFinishedOuterScopes = new Stack<>();
+        for (HashMap<String,Variable<Object>> a: nf
+             ) {
+                HashMap<String,Integer> hm = new HashMap<>();
+            for (var b:a.entrySet()
+                 ) {
+                hm.put(b.getKey(),typeToInt(b.getValue().type));
+            }
+
+            notFinishedOuterScopes.push(hm);
+        }
+    }
+
+    private Integer typeToInt(String TYPETMP)
+    {
+        int type= 0;
+        switch (TYPETMP){
+            case "int": type=gParser.IntegerConstant; break;
+            case "float": type=gParser.FloatingConstant; break;
+            case "string": type=gParser.StringLiteral; break;
+        }
+        return (Integer) new java.lang.Integer(type);
+    }
 
     @Override public Integer visitBlockItemList(gParser.BlockItemListContext ctx) {
         System.out.println("OPENING NEW SCOPE");
@@ -120,6 +144,7 @@ public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
             String varname = (String) ctx.Identifier().getText();
             System.out.println("VALIDATING USE OF:" + varname);
 
+
             if (!findDeclaration(varname)) {
                 System.out.println(varname + " is not declared in this scope");
                 isError = true;
@@ -192,6 +217,8 @@ public class TypeCheckVisitor<Integer> extends gBaseVisitor<Integer>{
 
     public boolean findDeclaration(String name)
     {
+        System.out.println(notFinishedOuterScopes.toString());
+
         if(notFinishedOuterScopes.empty())
             return false;
         for (HashMap<String, Integer> map: notFinishedOuterScopes.stream().toList() ) {

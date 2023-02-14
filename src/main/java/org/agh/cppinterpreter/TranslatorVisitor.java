@@ -148,7 +148,7 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                 return new StringBuilder(ctx.getText());
             }
         }
-    public class typeArgumentPair{
+    public static class typeArgumentPair{
             String type;
             String value;
 
@@ -188,7 +188,7 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                     isIgnored = true;
                 }
 
-                TypeCheckVisitor typeCheck = new TypeCheckVisitor();
+                TypeCheckVisitor typeCheck;
                 ArrayList<typeArgumentPair> argumentText  = new ArrayList<>();
                 if( ctx.argumentExpressionList() !=null) {
                     for (var argExpList: ctx.argumentExpressionList()) {
@@ -203,9 +203,12 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                                     arguments.append(visitAssignmentExpression(assexpr).toString());
                                 }
                                 else {
+                                    System.out.println(String.format("TYPE CHECKING %s",assexpr.getText()));
+                                    String childCode =visitAssignmentExpression(assexpr).toString();
+                                    typeCheck = new TypeCheckVisitor(notFinishedOuterScopes);
                                     String typename = CodeGenerator.typeName((Integer) typeCheck.visit(assexpr));
                                     functionName.append(typename);
-                                    argumentText.add(new typeArgumentPair(typename, visitAssignmentExpression(assexpr).toString()));
+                                    argumentText.add(new typeArgumentPair(typename, childCode));
                                 }
                             }
                         }
@@ -226,7 +229,6 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
             }
 
     }
-
         public boolean findDeclaration(String name)
         {
             if(notFinishedOuterScopes.empty())
