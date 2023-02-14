@@ -36,7 +36,7 @@ public class Main {
 
         ValidatorVisitor<Boolean> scopeValidator = new ValidatorVisitor<>();
         scopeValidator.visitCompilationUnit(programEntry);
-        System.out.println("Finished validating scopes");
+        System.out.println("Finished validating scopes---------------------------------\n");
 
         //TypeCheckVisitor<Boolean> typeValidator = new TypeCheckVisitor<>();
         //typeValidator.visitCompilationUnit(programEntry);

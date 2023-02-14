@@ -20,7 +20,9 @@ public class ValidatorVisitor<T> extends gBaseVisitor<T>{
     @Override public T visitBlockItemList(gParser.BlockItemListContext ctx) {
         System.out.println("OPENING NEW SCOPE");
         notFinishedOuterScopes.add(new HashMap<>());
-        return visitChildren(ctx);
+        var a= visitChildren(ctx);
+        notFinishedOuterScopes.pop();
+        return a;
     }
     @Override public T visitCompilationUnit(gParser.CompilationUnitContext ctx) {
         System.out.println("VALIDATION START");

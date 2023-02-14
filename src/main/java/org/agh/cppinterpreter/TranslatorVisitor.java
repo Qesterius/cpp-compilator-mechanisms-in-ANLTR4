@@ -1,5 +1,7 @@
 package org.agh.cppinterpreter;
 
+import org.antlr.v4.runtime.tree.TerminalNode;
+
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -51,6 +53,7 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
         }
 
         public TranslatorVisitor() {
+            System.out.println("OPENING NEW SCOPE");
             notFinishedOuterScopes.add(new HashMap<String,Variable<Object>>());
         }
 
@@ -60,7 +63,8 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
             StringBuilder concat = new StringBuilder();
             for(int i=0; i<ctx.blockItem().size();i++)
                 concat.append(visitBlockItem(ctx.blockItem(i))+";\n");
-
+            notFinishedOuterScopes.pop();
+            System.out.println("CLOSING SCOPE");
             return new StringBuilder("{\n"+concat+"}\n");
         }
         public StringBuilder visitBlockItemListWithoutScopeOpen(gParser.BlockItemListContext ctx) {
@@ -108,10 +112,6 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
 
 
 
-    private void validateDeclaration(String varname, String declarationCode)
-        {
-            validateDeclaration(varname,"undefined",declarationCode);
-        }
         void validateDeclaration(String varname, String type, String declarationCode)
         {
             System.out.println("VALIDATING DECLARATION OF:"+varname);
@@ -159,6 +159,15 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
     }
 
     String[] IGNOREDFUNCTIONS = new String[]{"printf"};
+
+    @Override
+    public StringBuilder visitSelectionStatement(gParser.SelectionStatementContext ctx) {
+
+
+        return super.visitSelectionStatement(ctx);
+    }
+
+
     @Override
     public StringBuilder visitPostfixExpression(gParser.PostfixExpressionContext ctx) {
             System.out.println(ctx.getText()+"  " + ctx.getChildCount());
@@ -230,6 +239,8 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
         }
         public Variable<Object> findAndGetDeclaration(String name)
         {
+            System.out.println(notFinishedOuterScopes.toString());
+
             if(notFinishedOuterScopes.empty())
                 return null;
             for (HashMap<String, Variable<Object>> map: notFinishedOuterScopes.stream().toList() ) {
@@ -276,6 +287,8 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
         StringBuilder name = new StringBuilder(ctx.declarator().directDeclarator().directDeclarator().getText());
         ArrayList<String> argNames = new ArrayList<>();
         ArrayList<String> argTypes = new ArrayList<>();
+        System.out.println("OPENING NEW SCOPE");
+
         notFinishedOuterScopes.add(new HashMap<>());
 
         if(ctx.declarator().directDeclarator().parameterTypeList() != null)
@@ -305,8 +318,15 @@ public class TranslatorVisitor extends gBaseVisitor<StringBuilder> {
                 validateDeclaration(argNames.get(i), argTypes.get(i), "");
             }
             code.append(visitBlockItemListWithoutScopeOpen(ctx.compoundStatement().blockItemList()));
+            notFinishedOuterScopes.pop();
+            System.out.println("CLOSING SCOPE");
             code.append(" return;\n}");
         }
         return code;
+    }
+
+    @Override
+    public StringBuilder visitTerminal(TerminalNode node) {
+        return new StringBuilder(node.getText());
     }
 }
